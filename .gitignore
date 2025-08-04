@@ -8,3 +8,5 @@ obj/
 *.db
 *.log
 .env
+**/appsettings.json
+**/PastelDbContext.cs
