@@ -7,7 +7,8 @@ public partial class Pedido
 {
     public int Id { get; set; }
 
-    public DateOnly Fecha { get; set; }
+    public DateTime Fecha { get; set; }
+
 
     public decimal Total { get; set; }
 

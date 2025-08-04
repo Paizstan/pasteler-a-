@@ -1,0 +1,57 @@
+﻿@model IEnumerable<SistemadePasteleria.Models.Cliente>
+
+@{
+    ViewData["Title"] = "Clientes";
+}
+
+<h2>Lista de Clientes</h2>
+
+
+<form method="get">
+    <div class="input-group mb-3">
+        <input type="text" name="busqueda" value="@ViewBag.Busqueda" class="form-control" placeholder="Buscar por nombre o correo" />
+        <button type="submit" class="btn btn-primary">Buscar</button>
+    </div>
+</form>
+<a asp-action="Create" class="btn btn-success mb-3">+ Nuevo Cliente</a>
+
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Teléfono</th>
+            <th>Correo</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Nombre</td>
+                <td>@item.Telefono</td>
+                <td>@item.Correo</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-sm">Editar</a>
+                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info btn-sm">Ver</a>
+                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-sm">Eliminar</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (ViewBag.TotalPaginas > 1)
+{
+    <nav>
+        <ul class="pagination">
+            @for (int i = 1; i <= ViewBag.TotalPaginas; i++)
+            {
+                <li class="page-item @(i == ViewBag.PaginaActual ? "active" : "")">
+                    <a class="page-link" href="?pagina=@i&busqueda=@ViewBag.Busqueda">@i</a>
+                </li>
+            }
+        </ul>
+    </nav>
+}
