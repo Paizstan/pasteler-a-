@@ -20,3 +20,41 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #ffe6f0; /* Rosa pastel */
+    color: #333333; /* Negro suave */
+    margin: 0;
+    padding: 0;
+}
+
+h1 {
+    color: #c71585; /* Rosa fuerte/magenta pastel */
+    font-size: 3rem;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+a {
+    color: #d36ba3; /* Rosa medio que combina */
+    text-decoration: none;
+}
+
+    a:hover {
+        color: #a0527c; /* Rosa más oscuro al pasar el mouse */
+        text-decoration: underline;
+    }
+
+.text-center {
+    padding: 50px;
+    background-color: #ffd6e8; /* Otro tono de rosa pastel */
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+p {
+    font-size: 1.2rem;
+    margin-top: 10px;
+    color: #444444; /* Gris oscuro legible */
+}
