@@ -31,20 +31,22 @@ public partial class PasteldbContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
+
         => optionsBuilder.UseSqlServer("Server=LAPTOP-J5K6C0NI;Database=pasteldb;Trusted_Connection=True;TrustServerCertificate=True");
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Categoria>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Categori__3214EC0787419848");
+            entity.HasKey(e => e.Id).HasName("PK__Categori__3214EC073A421952");
 
             entity.Property(e => e.Nombre).HasMaxLength(100);
         });
 
         modelBuilder.Entity<Cliente>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Clientes__3214EC07DCA736B3");
+            entity.HasKey(e => e.Id).HasName("PK__Clientes__3214EC0781F9D970");
 
             entity.Property(e => e.Correo).HasMaxLength(100);
             entity.Property(e => e.Nombre).HasMaxLength(100);
@@ -53,7 +55,7 @@ public partial class PasteldbContext : DbContext
 
         modelBuilder.Entity<DetallePedido>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__DetalleP__3214EC0702BD4D29");
+            entity.HasKey(e => e.Id).HasName("PK__DetalleP__3214EC077E3B8165");
 
             entity.Property(e => e.PrecioUnitario).HasColumnType("decimal(10, 2)");
             entity.Property(e => e.Subtotal).HasColumnType("decimal(10, 2)");
@@ -71,7 +73,7 @@ public partial class PasteldbContext : DbContext
 
         modelBuilder.Entity<Pedido>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Pedidos__3214EC071BAF88BB");
+            entity.HasKey(e => e.Id).HasName("PK__Pedidos__3214EC07EF4193EB");
 
             entity.Property(e => e.Total).HasColumnType("decimal(10, 2)");
 
@@ -88,7 +90,7 @@ public partial class PasteldbContext : DbContext
 
         modelBuilder.Entity<Producto>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Producto__3214EC07479E463F");
+            entity.HasKey(e => e.Id).HasName("PK__Producto__3214EC0714C090B1");
 
             entity.Property(e => e.ImagenUrl).HasMaxLength(200);
             entity.Property(e => e.Nombre).HasMaxLength(100);
@@ -101,14 +103,14 @@ public partial class PasteldbContext : DbContext
 
         modelBuilder.Entity<Role>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Roles__3214EC07EF85F175");
+            entity.HasKey(e => e.Id).HasName("PK__Roles__3214EC07C9494DCB");
 
             entity.Property(e => e.Nombre).HasMaxLength(50);
         });
 
         modelBuilder.Entity<Usuario>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Usuarios__3214EC07CE922D50");
+            entity.HasKey(e => e.Id).HasName("PK__Usuarios__3214EC079F88702F");
 
             entity.Property(e => e.Nombre).HasMaxLength(100);
             entity.Property(e => e.PasswordHash).HasMaxLength(200);
