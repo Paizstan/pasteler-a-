@@ -1,8 +1,44 @@
 ﻿@{
     ViewData["Title"] = "Home Page";
 }
+<link rel="stylesheet" href="~/css/styles.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="container text-center mt-5">
+    <h1 class="display-4" style="color: #c71585;">VIDA MÍA</h1>
+    <p class="lead">Dulzura en cada bocado. Descubre nuestros pasteles artesanales hechos con amor.</p>
+    <a href="/productos" class="btn btn-lg" style="background-color: #d36ba3; color: white; border: none;">
+        <i class="bi bi-cake-fill"></i> Ver Productos
+    </a>
+</div>
+
+<!-- Galería de pasteles -->
+<div class="container my-5">
+    <h2 class="text-center" style="color: #a0527c;">Nuestros Pasteles</h2>
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <img src="~/images/azul.jpeg" class="img-fluid rounded shadow" alt="pastel 1" />
+        </div>
+        <div class="col-md-4">
+            <img src="~/images/celeste.jpeg" class="img-fluid rounded shadow" alt="pastel 2" />
+        </div>
+        <div class="col-md-4">
+            <img src="~/images/auto.jpeg" class="img-fluid rounded shadow" alt="pastel 3" />
+        </div>
+    </div>
+</div>
+
+<!-- Reseña del negocio -->
+<div class="container text-center my-5 p-4 rounded" style="background-color: #ffd6e8;">
+    <h3 style="color: #c71585;">¿Quiénes Somos?</h3>
+    <p class="mt-3" style="color: #444;">En Vida Mía nos dedicamos a crear momentos dulces e inolvidables. Nuestros pasteles y postres son elaborados con ingredientes de la más alta calidad y mucho cariño.</p>
+</div>
+
+<!-- Información de contacto -->
+<div class="container text-center my-5">
+    <h4 style="color: #c71585;"><i class="bi bi-geo-alt-fill"></i> Dirección</h4>
+    <p>Chalatenango Sur, El Salvador</p>
+
+    <h4 style="color: #c71585;"><i class="bi bi-telephone-fill"></i> Teléfonos</h4>
+    <p>+503 2222-1234 | +503 7888-5678</p>
 </div>
