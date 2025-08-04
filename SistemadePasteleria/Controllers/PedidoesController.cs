@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using SistemadePasteleria.Models;
+using SistemadePasteleria.Models.ViewModels;
 
 namespace SistemadePasteleria.Controllers
 {
@@ -28,89 +29,102 @@ namespace SistemadePasteleria.Controllers
         // GET: Pedidoes/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var pedido = await _context.Pedidos
                 .Include(p => p.Cliente)
                 .Include(p => p.Usuario)
                 .FirstOrDefaultAsync(m => m.Id == id);
-            if (pedido == null)
-            {
-                return NotFound();
-            }
+
+            if (pedido == null) return NotFound();
 
             return View(pedido);
         }
 
-        // GET: Pedidoes/Create
+        // ✅ GET: Pedidoes/Create
+        [HttpGet]
         public IActionResult Create()
         {
             ViewData["ClienteId"] = new SelectList(_context.Clientes, "Id", "Nombre");
             ViewData["UsuarioId"] = new SelectList(_context.Usuarios, "Id", "Nombre");
-            return View(new Pedido { Fecha = DateTime.Today });
+            ViewData["Productos"] = new SelectList(_context.Productos, "Id", "Nombre");
+
+            var viewModel = new PedidoViewModel();
+            return View(viewModel);
         }
 
-
-        // POST: Pedidoes/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        // ✅ POST: Pedidoes/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Fecha,Total,ClienteId,UsuarioId")] Pedido pedido)
+        public async Task<IActionResult> Create(PedidoViewModel model)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                try
-                {
-                    _context.Add(pedido);
-                    await _context.SaveChangesAsync();
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (Exception ex)
-                {
-                    ModelState.AddModelError("", "Error al guardar: " + ex.Message);
-                }
+                ViewData["ClienteId"] = new SelectList(_context.Clientes, "Id", "Nombre", model.ClienteId);
+                ViewData["UsuarioId"] = new SelectList(_context.Usuarios, "Id", "Nombre", model.UsuarioId);
+                ViewData["Productos"] = new SelectList(_context.Productos, "Id", "Nombre");
+                return View(model);
             }
 
-            // Muestra errores si los hay
-            ViewData["ClienteId"] = new SelectList(_context.Clientes, "Id", "Id", pedido.ClienteId);
-            ViewData["UsuarioId"] = new SelectList(_context.Usuarios, "Id", "Id", pedido.UsuarioId);
-            return View(pedido);
-        }
+            try
+            {
+                var pedido = new Pedido
+                {
+                    ClienteId = model.ClienteId,
+                    UsuarioId = model.UsuarioId,
+                    Fecha = DateTime.Now,
+                    Total = model.Productos.Sum(p => p.Cantidad * p.PrecioUnitario)
+                };
 
+                _context.Pedidos.Add(pedido);
+                await _context.SaveChangesAsync();
+
+                foreach (var item in model.Productos)
+                {
+                    var detalle = new DetallePedido
+                    {
+                        PedidoId = pedido.Id,
+                        ProductoId = item.ProductoId,
+                        Cantidad = item.Cantidad,
+                        PrecioUnitario = item.PrecioUnitario,
+                        Subtotal = item.Cantidad * item.PrecioUnitario
+                    };
+
+                    _context.DetallePedidos.Add(detalle);
+                }
+
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", "Error al guardar: " + ex.Message);
+                ViewData["ClienteId"] = new SelectList(_context.Clientes, "Id", "Nombre", model.ClienteId);
+                ViewData["UsuarioId"] = new SelectList(_context.Usuarios, "Id", "Nombre", model.UsuarioId);
+                ViewData["Productos"] = new SelectList(_context.Productos, "Id", "Nombre");
+                return View(model);
+            }
+        }
 
         // GET: Pedidoes/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var pedido = await _context.Pedidos.FindAsync(id);
-            if (pedido == null)
-            {
-                return NotFound();
-            }
-            ViewData["ClienteId"] = new SelectList(_context.Clientes, "Id", "Id", pedido.ClienteId);
-            ViewData["UsuarioId"] = new SelectList(_context.Usuarios, "Id", "Id", pedido.UsuarioId);
+            if (pedido == null) return NotFound();
+
+            ViewData["ClienteId"] = new SelectList(_context.Clientes, "Id", "Nombre", pedido.ClienteId);
+            ViewData["UsuarioId"] = new SelectList(_context.Usuarios, "Id", "Nombre", pedido.UsuarioId);
             return View(pedido);
         }
 
         // POST: Pedidoes/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Fecha,Total,ClienteId,UsuarioId")] Pedido pedido)
         {
-            if (id != pedido.Id)
-            {
-                return NotFound();
-            }
+            if (id != pedido.Id) return NotFound();
 
             if (ModelState.IsValid)
             {
@@ -118,41 +132,31 @@ namespace SistemadePasteleria.Controllers
                 {
                     _context.Update(pedido);
                     await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!PedidoExists(pedido.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    if (!PedidoExists(pedido.Id)) return NotFound();
+                    else throw;
                 }
-                return RedirectToAction(nameof(Index));
             }
-            ViewData["ClienteId"] = new SelectList(_context.Clientes, "Id", "Id", pedido.ClienteId);
-            ViewData["UsuarioId"] = new SelectList(_context.Usuarios, "Id", "Id", pedido.UsuarioId);
+
+            ViewData["ClienteId"] = new SelectList(_context.Clientes, "Id", "Nombre", pedido.ClienteId);
+            ViewData["UsuarioId"] = new SelectList(_context.Usuarios, "Id", "Nombre", pedido.UsuarioId);
             return View(pedido);
         }
 
         // GET: Pedidoes/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var pedido = await _context.Pedidos
                 .Include(p => p.Cliente)
                 .Include(p => p.Usuario)
                 .FirstOrDefaultAsync(m => m.Id == id);
-            if (pedido == null)
-            {
-                return NotFound();
-            }
+
+            if (pedido == null) return NotFound();
 
             return View(pedido);
         }
@@ -166,9 +170,9 @@ namespace SistemadePasteleria.Controllers
             if (pedido != null)
             {
                 _context.Pedidos.Remove(pedido);
+                await _context.SaveChangesAsync();
             }
 
-            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
