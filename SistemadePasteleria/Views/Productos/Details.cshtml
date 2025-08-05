@@ -1,48 +1,66 @@
 ﻿@model SistemadePasteleria.Models.Producto
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Detalles del Producto";
 }
 
-<h1>Details</h1>
+<h2 class="text-center text-info mb-4">
+    <i class="bi bi-card-text"></i> Detalles del Producto
+</h2>
 
-<div>
-    <h4>Producto</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Nombre)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Nombre)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Precio)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Precio)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Stock)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Stock)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ImagenUrl)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ImagenUrl)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Categoria)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Categoria.Id)
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+<div class="row justify-content-center">
+    <div class="col-md-8 shadow p-4 rounded bg-light">
+        <dl class="row fs-5">
+            <dt class="col-sm-3 text-end fw-bold">
+                <i class="bi bi-tag-fill"></i> Nombre:
+            </dt>
+            <dd class="col-sm-9">
+                @Html.DisplayFor(model => model.Nombre)
+            </dd>
+
+            <dt class="col-sm-3 text-end fw-bold">
+                <i class="bi bi-currency-dollar"></i> Precio:
+            </dt>
+            <dd class="col-sm-9">
+                @Html.DisplayFor(model => model.Precio)
+            </dd>
+
+            <dt class="col-sm-3 text-end fw-bold">
+                <i class="bi bi-box-seam"></i> Stock:
+            </dt>
+            <dd class="col-sm-9">
+                @Html.DisplayFor(model => model.Stock)
+            </dd>
+
+            <dt class="col-sm-3 text-end fw-bold">
+                <i class="bi bi-image"></i> Imagen:
+            </dt>
+            <dd class="col-sm-9">
+                @if (!string.IsNullOrEmpty(Model.ImagenUrl))
+                {
+                    <img src="@Model.ImagenUrl" width="150" class="rounded shadow" />
+                }
+                else
+                {
+                    <span class="text-muted">No hay imagen disponible</span>
+                }
+            </dd>
+
+            <dt class="col-sm-3 text-end fw-bold">
+                <i class="bi bi-bookmark-fill"></i> Categoría:
+            </dt>
+            <dd class="col-sm-9">
+                @Model.Categoria?.Nombre
+            </dd>
+        </dl>
+
+        <div class="d-flex justify-content-between mt-4">
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="bi bi-arrow-left-circle"></i> Volver
+            </a>
+            <a asp-action="Edit" asp-route-id="@Model?.Id" class="btn btn-warning">
+                <i class="bi bi-pencil-square"></i> Editar
+            </a>
+        </div>
+    </div>
 </div>

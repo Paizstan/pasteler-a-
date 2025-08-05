@@ -49,7 +49,7 @@ namespace SistemadePasteleria.Controllers
         // GET: Productos/Create
         public IActionResult Create()
         {
-            ViewData["CategoriaId"] = new SelectList(_context.Categorias, "Id", "Id");
+            ViewData["CategoriaId"] = new SelectList(_context.Categorias, "Id", "Nombre");
             return View();
         }
 
@@ -58,17 +58,40 @@ namespace SistemadePasteleria.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Nombre,Precio,Stock,ImagenUrl,CategoriaId")] Producto producto)
+        public async Task<IActionResult> Create(Producto producto, IFormFile imagenInput)
         {
+            if (imagenInput != null && imagenInput.Length > 0)
+            {
+                // Asegura que la carpeta exista
+                var rutaCarpeta = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "imagenes");
+                if (!Directory.Exists(rutaCarpeta))
+                    Directory.CreateDirectory(rutaCarpeta);
+
+                // Nombre único para evitar conflictos
+                var nombreArchivo = Guid.NewGuid().ToString() + Path.GetExtension(imagenInput.FileName);
+                var rutaCompleta = Path.Combine(rutaCarpeta, nombreArchivo);
+
+                // Guardar el archivo en wwwroot/imagenes
+                using (var stream = new FileStream(rutaCompleta, FileMode.Create))
+                {
+                    await imagenInput.CopyToAsync(stream);
+                }
+
+                // Guardar la ruta relativa en la base de datos
+                producto.ImagenUrl = "/imagenes/" + nombreArchivo;
+            }
+
             if (ModelState.IsValid)
             {
                 _context.Add(producto);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["CategoriaId"] = new SelectList(_context.Categorias, "Id", "Id", producto.CategoriaId);
+
+            ViewData["CategoriaId"] = new SelectList(_context.Categorias, "Id", "Nombre", producto.CategoriaId);
             return View(producto);
         }
+
 
         // GET: Productos/Edit/5
         public async Task<IActionResult> Edit(int? id)
@@ -92,34 +115,48 @@ namespace SistemadePasteleria.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Nombre,Precio,Stock,ImagenUrl,CategoriaId")] Producto producto)
+        public async Task<IActionResult> Edit(int id, Producto producto, IFormFile imagenInput)
         {
             if (id != producto.Id)
-            {
                 return NotFound();
-            }
 
             if (ModelState.IsValid)
             {
                 try
                 {
+                    if (imagenInput != null && imagenInput.Length > 0)
+                    {
+                        var ruta = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "imagenes");
+                        if (!Directory.Exists(ruta))
+                        {
+                            Directory.CreateDirectory(ruta);
+                        }
+
+                        var nombreArchivo = Guid.NewGuid().ToString() + Path.GetExtension(imagenInput.FileName);
+                        var rutaCompleta = Path.Combine(ruta, nombreArchivo);
+
+                        using (var stream = new FileStream(rutaCompleta, FileMode.Create))
+                        {
+                            await imagenInput.CopyToAsync(stream);
+                        }
+
+                        producto.ImagenUrl = "/imagenes/" + nombreArchivo;
+                    }
+
                     _context.Update(producto);
                     await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!ProductoExists(producto.Id))
-                    {
+                    if (!_context.Productos.Any(p => p.Id == producto.Id))
                         return NotFound();
-                    }
                     else
-                    {
                         throw;
-                    }
                 }
-                return RedirectToAction(nameof(Index));
             }
-            ViewData["CategoriaId"] = new SelectList(_context.Categorias, "Id", "Id", producto.CategoriaId);
+
+            ViewData["CategoriaId"] = new SelectList(_context.Categorias, "Id", "Nombre", producto.CategoriaId);
             return View(producto);
         }
 

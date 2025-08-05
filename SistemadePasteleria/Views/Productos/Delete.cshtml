@@ -1,51 +1,74 @@
 ﻿@model SistemadePasteleria.Models.Producto
 
 @{
-    ViewData["Title"] = "Delete";
+    ViewData["Title"] = "Eliminar Producto";
 }
 
-<h1>Delete</h1>
+<h2 class="text-center text-danger mb-4">
+    <i class="bi bi-trash3-fill"></i> Confirmar Eliminación
+</h2>
 
-<h3>Are you sure you want to delete this?</h3>
-<div>
-    <h4>Producto</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Nombre)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Nombre)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Precio)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Precio)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Stock)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Stock)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ImagenUrl)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ImagenUrl)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Categoria)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Categoria.Id)
-        </dd>
-    </dl>
-    
-    <form asp-action="Delete">
-        <input type="hidden" asp-for="Id" />
-        <input type="submit" value="Delete" class="btn btn-danger" /> |
-        <a asp-action="Index">Back to List</a>
-    </form>
+<div class="row justify-content-center">
+    <div class="col-md-8 shadow p-4 rounded bg-light">
+
+        <div class="alert alert-warning text-center fs-5">
+            ¿Estás seguro que deseas eliminar el siguiente producto?
+        </div>
+
+        <dl class="row fs-5">
+            <dt class="col-sm-3 text-end fw-bold">
+                <i class="bi bi-tag-fill"></i> Nombre:
+            </dt>
+            <dd class="col-sm-9">
+                @Html.DisplayFor(model => model.Nombre)
+            </dd>
+
+            <dt class="col-sm-3 text-end fw-bold">
+                <i class="bi bi-currency-dollar"></i> Precio:
+            </dt>
+            <dd class="col-sm-9">
+                @Html.DisplayFor(model => model.Precio)
+            </dd>
+
+            <dt class="col-sm-3 text-end fw-bold">
+                <i class="bi bi-box-seam"></i> Stock:
+            </dt>
+            <dd class="col-sm-9">
+                @Html.DisplayFor(model => model.Stock)
+            </dd>
+
+            <dt class="col-sm-3 text-end fw-bold">
+                <i class="bi bi-image"></i> Imagen:
+            </dt>
+            <dd class="col-sm-9">
+                @if (!string.IsNullOrEmpty(Model.ImagenUrl))
+                {
+                    <img src="@Model.ImagenUrl" width="120" class="rounded shadow-sm" />
+                }
+                else
+                {
+                    <span class="text-muted">No hay imagen</span>
+                }
+            </dd>
+
+            <dt class="col-sm-3 text-end fw-bold">
+                <i class="bi bi-bookmark-fill"></i> Categoría:
+            </dt>
+            <dd class="col-sm-9">
+                @Model.Categoria?.Nombre
+            </dd>
+        </dl>
+
+        <form asp-action="Delete" class="mt-4 d-flex justify-content-between">
+            <input type="hidden" asp-for="Id" />
+
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="bi bi-arrow-left-circle"></i> Cancelar
+            </a>
+
+            <button type="submit" class="btn btn-danger">
+                <i class="bi bi-trash3-fill"></i> Eliminar
+            </button>
+        </form>
+    </div>
 </div>
