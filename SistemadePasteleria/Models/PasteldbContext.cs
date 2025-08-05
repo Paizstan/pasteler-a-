@@ -31,13 +31,9 @@ public partial class PasteldbContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-<<<<<<< HEAD
-        => optionsBuilder.UseSqlServer("Server=LAPTOP-J5K6C0NI;Database=pasteldb;Trusted_Connection=True;TrustServerCertificate=True");
-=======
 
         => optionsBuilder.UseSqlServer("Server=LAPTOP-J5K6C0NI;Database=pasteldb;Trusted_Connection=True;TrustServerCertificate=True");
 
->>>>>>> 8414686504f62b6eec467d46d2aa60fed583615b
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
