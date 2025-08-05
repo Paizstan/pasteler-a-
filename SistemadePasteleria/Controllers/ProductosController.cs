@@ -113,34 +113,48 @@ namespace SistemadePasteleria.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Nombre,Precio,Stock,ImagenUrl,CategoriaId")] Producto producto)
+        public async Task<IActionResult> Edit(int id, Producto producto, IFormFile imagenInput)
         {
             if (id != producto.Id)
-            {
                 return NotFound();
-            }
 
             if (ModelState.IsValid)
             {
                 try
                 {
+                    if (imagenInput != null && imagenInput.Length > 0)
+                    {
+                        var ruta = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "imagenes");
+                        if (!Directory.Exists(ruta))
+                        {
+                            Directory.CreateDirectory(ruta);
+                        }
+
+                        var nombreArchivo = Guid.NewGuid().ToString() + Path.GetExtension(imagenInput.FileName);
+                        var rutaCompleta = Path.Combine(ruta, nombreArchivo);
+
+                        using (var stream = new FileStream(rutaCompleta, FileMode.Create))
+                        {
+                            await imagenInput.CopyToAsync(stream);
+                        }
+
+                        producto.ImagenUrl = "/imagenes/" + nombreArchivo;
+                    }
+
                     _context.Update(producto);
                     await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!ProductoExists(producto.Id))
-                    {
+                    if (!_context.Productos.Any(p => p.Id == producto.Id))
                         return NotFound();
-                    }
                     else
-                    {
                         throw;
-                    }
                 }
-                return RedirectToAction(nameof(Index));
             }
-            ViewData["CategoriaId"] = new SelectList(_context.Categorias, "Id", "Id", producto.CategoriaId);
+
+            ViewData["CategoriaId"] = new SelectList(_context.Categorias, "Id", "Nombre", producto.CategoriaId);
             return View(producto);
         }
 

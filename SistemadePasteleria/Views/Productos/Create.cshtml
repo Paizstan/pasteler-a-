@@ -1,62 +1,62 @@
 ﻿@model SistemadePasteleria.Models.Producto
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Crear Producto";
 }
 
-<h1>Create</h1>
+<h2 class="text-center text-success mb-4">
+    <i class="bi bi-plus-circle-fill"></i> Crear Nuevo Producto
+</h2>
 
-<h4>Producto</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
+<div class="row justify-content-center">
+    <div class="col-md-6 shadow p-4 rounded bg-light">
         <form asp-action="Create" enctype="multipart/form-data">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-            <div class="form-group">
-                <label asp-for="Nombre" class="control-label"></label>
+            <div class="form-group mb-3">
+                <label asp-for="Nombre" class="form-label fw-bold">Nombre</label>
                 <input asp-for="Nombre" class="form-control" />
                 <span asp-validation-for="Nombre" class="text-danger"></span>
             </div>
 
-            <div class="form-group">
-                <label asp-for="Precio" class="control-label"></label>
+            <div class="form-group mb-3">
+                <label asp-for="Precio" class="form-label fw-bold">Precio</label>
                 <input asp-for="Precio" class="form-control" />
                 <span asp-validation-for="Precio" class="text-danger"></span>
             </div>
 
-            <div class="form-group">
-                <label asp-for="Stock" class="control-label"></label>
+            <div class="form-group mb-3">
+                <label asp-for="Stock" class="form-label fw-bold">Stock</label>
                 <input asp-for="Stock" class="form-control" />
                 <span asp-validation-for="Stock" class="text-danger"></span>
             </div>
 
-            <div class="form-group">
-                <label asp-for="ImagenUrl" class="control-label"></label>
+            <div class="form-group mb-3">
+                <label asp-for="ImagenUrl" class="form-label fw-bold">Seleccionar Imagen</label>
                 <input type="file" id="imagenInput" name="imagenInput" class="form-control" />
                 <span asp-validation-for="ImagenUrl" class="text-danger"></span>
             </div>
 
-            <!-- Vista previa -->
-            <div class="form-group">
-                <img id="previewImage" src="#" alt="Vista previa" style="display:none; width:200px; margin-top:10px;" />
+            <div class="form-group text-center mb-3">
+                <img id="previewImage" src="#" alt="Vista previa" style="display:none; width: 200px; border-radius: 8px; box-shadow: 0 0 5px #ccc;" />
             </div>
 
-            <div class="form-group">
-                <label asp-for="CategoriaId" class="control-label"></label>
-                <select asp-for="CategoriaId" class="form-control" asp-items="ViewBag.CategoriaId"></select>
+            <div class="form-group mb-4">
+                <label asp-for="CategoriaId" class="form-label fw-bold">Categoría</label>
+                <select asp-for="CategoriaId" class="form-select" asp-items="ViewBag.CategoriaId"></select>
                 <span asp-validation-for="CategoriaId" class="text-danger"></span>
             </div>
 
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
+            <div class="d-flex justify-content-between">
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left-circle"></i> Volver
+                </a>
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-save2-fill"></i> Crear
+                </button>
             </div>
         </form>
     </div>
-</div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
 </div>
 
 @section Scripts {
