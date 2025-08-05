@@ -33,10 +33,7 @@ public partial class PasteldbContext : DbContext
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
 
         => optionsBuilder.UseSqlServer("Server=DESKTOP-CM8A4JK\\MSSQLSERVER01;Database=pasteldb;Trusted_Connection=True;TrustServerCertificate=True");
-<<<<<<< HEAD
 
-=======
->>>>>>> c9515a2a6118cb5d574d3e3d834ac88bf9296531
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
