@@ -1,0 +1,34 @@
+﻿@{
+    ViewData["Title"] = "Iniciar Sesión";
+}
+
+<div class="container mt-5 d-flex justify-content-center">
+    <div class="card shadow p-4" style="width: 400px;">
+        <h3 class="text-center mb-4">🍰VIDA MÍA</h3>
+
+        <!-- Mensajes de error (si los usas) -->
+        @if (ViewBag.Error != null)
+        {
+            <div class="alert alert-danger text-center">@ViewBag.Error</div>
+        }
+
+        <form asp-action="Login" method="post">
+            <div class="mb-3">
+                <label for="Nombre" class="form-label">Usuario</label>
+                <input type="text" class="form-control" name="Nombre" required />
+            </div>
+            <div class="mb-3">
+                <label for="PasswordHash" class="form-label">Contraseña</label>
+                <input type="password" class="form-control" name="PasswordHash" required />
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Iniciar Sesión</button>
+        </form>
+
+        <hr class="my-4" />
+
+        <div class="text-center">
+            <p>¿No tienes cuenta?</p>
+            <a class="btn btn-outline-success" asp-controller="Acceso" asp-action="Registrar">Registrarse</a>
+        </div>
+    </div>
+</div>

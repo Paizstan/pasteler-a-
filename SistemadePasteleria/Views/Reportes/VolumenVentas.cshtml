@@ -1,0 +1,49 @@
+﻿@model IEnumerable<SistemadePasteleria.Models.VolumenVentasModel>
+
+@{
+    ViewData["Title"] = "Volumen de Ventas";
+}
+
+<h2 class="text-center mb-4" style="color:#d2691e; font-family: 'Segoe UI', cursive;">
+    🍰 Reporte de Ventas por @((ViewBag.Filtro == "mes") ? "Mes" : "Día")
+</h2>
+
+<div class="d-flex justify-content-center mb-4">
+    <form method="get" asp-action="VolumenVentas" class="form-inline">
+        <label for="filtro" class="form-label me-2 fw-bold">Filtrar por:</label>
+        <select name="filtro" id="filtro" class="form-select me-2" style="width: 120px;">
+            <option value="dia" selected="@("dia" == ViewBag.Filtro)">Día</option>
+            <option value="mes" selected="@("mes" == ViewBag.Filtro)">Mes</option>
+        </select>
+        <button type="submit" class="btn btn-warning">🍮 Aplicar</button>
+    </form>
+</div>
+
+<table class="table table-bordered table-hover shadow-sm" style="background-color:#fffaf2;">
+    <thead class="table-warning text-center">
+        <tr>
+            <th>📅 Fecha</th>
+            <th>📦 Total Pedidos</th>
+            <th>💵 Total Vendido ($)</th>
+        </tr>
+    </thead>
+    <tbody class="text-center">
+        @if (!Model.Any())
+        {
+            <tr>
+                <td colspan="3" class="text-muted">No hay datos disponibles para el filtro seleccionado.</td>
+            </tr>
+        }
+        else
+        {
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.Fecha.ToString("dd/MM/yyyy")</td>
+                    <td>@item.TotalPedidos</td>
+                    <td>$@item.TotalVentas.ToString("F2")</td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>

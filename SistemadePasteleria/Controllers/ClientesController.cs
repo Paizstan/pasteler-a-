@@ -11,22 +11,41 @@ using SistemadePasteleria.Models;
 namespace SistemadePasteleria.Controllers
 {
     [Authorize]
-    public class CategoriasController : Controller
+    public class ClientesController : Controller
     {
         private readonly PasteldbContext _context;
 
-        public CategoriasController(PasteldbContext context)
+        public ClientesController(PasteldbContext context)
         {
             _context = context;
         }
 
-        // GET: Categorias
-        public async Task<IActionResult> Index()
+        // GET: Clientes
+        // GET: Clientes
+        public async Task<IActionResult> Index(string busqueda, int pagina = 1, int tamanoPagina = 5)
         {
-            return View(await _context.Categorias.ToListAsync());
+            var query = _context.Clientes.AsQueryable();
+
+            if (!string.IsNullOrEmpty(busqueda))
+            {
+                query = query.Where(c => c.Nombre.Contains(busqueda) || c.Correo.Contains(busqueda));
+            }
+
+            var totalRegistros = await query.CountAsync();
+
+            var clientes = await query
+                .Skip((pagina - 1) * tamanoPagina)
+                .Take(tamanoPagina)
+                .ToListAsync();
+
+            ViewBag.TotalPaginas = (int)Math.Ceiling((double)totalRegistros / tamanoPagina);
+            ViewBag.PaginaActual = pagina;
+            ViewBag.Busqueda = busqueda;
+
+            return View(clientes);
         }
 
-        // GET: Categorias/Details/5
+        // GET: Clientes/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -34,39 +53,39 @@ namespace SistemadePasteleria.Controllers
                 return NotFound();
             }
 
-            var categoria = await _context.Categorias
+            var cliente = await _context.Clientes
                 .FirstOrDefaultAsync(m => m.Id == id);
-            if (categoria == null)
+            if (cliente == null)
             {
                 return NotFound();
             }
 
-            return View(categoria);
+            return View(cliente);
         }
 
-        // GET: Categorias/Create
+        // GET: Clientes/Create
         public IActionResult Create()
         {
             return View();
         }
 
-        // POST: Categorias/Create
+        // POST: Clientes/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Nombre")] Categoria categoria)
+        public async Task<IActionResult> Create([Bind("Id,Nombre,Telefono,Correo")] Cliente cliente)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(categoria);
+                _context.Add(cliente);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            return View(categoria);
+            return View(cliente);
         }
 
-        // GET: Categorias/Edit/5
+        // GET: Clientes/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -74,22 +93,22 @@ namespace SistemadePasteleria.Controllers
                 return NotFound();
             }
 
-            var categoria = await _context.Categorias.FindAsync(id);
-            if (categoria == null)
+            var cliente = await _context.Clientes.FindAsync(id);
+            if (cliente == null)
             {
                 return NotFound();
             }
-            return View(categoria);
+            return View(cliente);
         }
 
-        // POST: Categorias/Edit/5
+        // POST: Clientes/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Nombre")] Categoria categoria)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Nombre,Telefono,Correo")] Cliente cliente)
         {
-            if (id != categoria.Id)
+            if (id != cliente.Id)
             {
                 return NotFound();
             }
@@ -98,12 +117,12 @@ namespace SistemadePasteleria.Controllers
             {
                 try
                 {
-                    _context.Update(categoria);
+                    _context.Update(cliente);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!CategoriaExists(categoria.Id))
+                    if (!ClienteExists(cliente.Id))
                     {
                         return NotFound();
                     }
@@ -114,10 +133,10 @@ namespace SistemadePasteleria.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            return View(categoria);
+            return View(cliente);
         }
 
-        // GET: Categorias/Delete/5
+        // GET: Clientes/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -125,34 +144,34 @@ namespace SistemadePasteleria.Controllers
                 return NotFound();
             }
 
-            var categoria = await _context.Categorias
+            var cliente = await _context.Clientes
                 .FirstOrDefaultAsync(m => m.Id == id);
-            if (categoria == null)
+            if (cliente == null)
             {
                 return NotFound();
             }
 
-            return View(categoria);
+            return View(cliente);
         }
 
-        // POST: Categorias/Delete/5
+        // POST: Clientes/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var categoria = await _context.Categorias.FindAsync(id);
-            if (categoria != null)
+            var cliente = await _context.Clientes.FindAsync(id);
+            if (cliente != null)
             {
-                _context.Categorias.Remove(categoria);
+                _context.Clientes.Remove(cliente);
             }
 
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
-        private bool CategoriaExists(int id)
+        private bool ClienteExists(int id)
         {
-            return _context.Categorias.Any(e => e.Id == id);
+            return _context.Clientes.Any(e => e.Id == id);
         }
     }
 }
