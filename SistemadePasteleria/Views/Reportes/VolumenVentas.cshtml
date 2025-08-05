@@ -9,15 +9,22 @@
 </h2>
 
 <div class="d-flex justify-content-center mb-4">
-    <form method="get" asp-action="VolumenVentas" class="form-inline">
+    <form method="get" asp-action="VolumenVentas" class="form-inline" id="filtroForm">
         <label for="filtro" class="form-label me-2 fw-bold">Filtrar por:</label>
-        <select name="filtro" id="filtro" class="form-select me-2" style="width: 120px;">
+        <select name="filtro" id="filtro" class="form-select me-2" style="width: 120px;" onchange="document.getElementById('filtroForm').submit();">
             <option value="dia" selected="@("dia" == ViewBag.Filtro)">Día</option>
             <option value="mes" selected="@("mes" == ViewBag.Filtro)">Mes</option>
         </select>
-        <button type="submit" class="btn btn-warning">🍮 Aplicar</button>
-    </form>
+    </form>    
 </div>
+
+<div class="text-center mb-4">
+        <a asp-action="GenerarVolumenVentasPdf"
+           asp-route-filtro="@ViewBag.Filtro"
+           class="btn btn-outline-danger">
+            📄 Descargar PDF
+        </a>
+    </div>
 
 <table class="table table-bordered table-hover shadow-sm" style="background-color:#fffaf2;">
     <thead class="table-warning text-center">
