@@ -11,7 +11,8 @@ builder.Services.AddDbContext<PasteldbContext>(o =>
 {
     o.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConecction"));
 });
-
+builder.Services.AddSession();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(option =>
     {
@@ -33,7 +34,7 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
+app.UseSession();
 app.UseRouting();
 
 app.UseAuthentication();
