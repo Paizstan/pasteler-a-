@@ -1,35 +1,50 @@
 ﻿@model IEnumerable<SistemadePasteleria.Models.Categoria>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Categorías";
 }
 
-<h1>Index</h1>
+<h2 class="text-center text-primary mb-4">
+    <i class="bi bi-bookmark-star-fill"></i> Categorías
+</h2>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <a asp-action="Create" class="btn btn-primary px-4 py-2">
+        <i class="bi bi-plus-circle-fill"></i> Crear nueva categoría
+    </a>
+
+    <form asp-action="Index" method="get" class="d-flex" role="search">
+        <input type="text" name="buscar" class="form-control me-2" placeholder="Buscar categoría..." />
+        <button type="submit" class="btn btn-outline-primary">
+            <i class="bi bi-search"></i>
+        </button>
+    </form>
+</div>
+
+<table class="table table-hover table-bordered shadow text-center">
+    <thead class="table-dark">
         <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Nombre)
-            </th>
-            <th></th>
+            <th>Nombre</th>
+            <th>Acciones</th>
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Nombre)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
-            </td>
-        </tr>
-}
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td class="align-middle">@item.Nombre</td>
+                <td class="align-middle">
+                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-warning btn-sm me-1">
+                        <i class="bi bi-pencil-square"></i> Editar
+                    </a>
+                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-info btn-sm me-1">
+                        <i class="bi bi-info-circle"></i> Detalles
+                    </a>
+                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-outline-danger btn-sm">
+                        <i class="bi bi-trash3-fill"></i> Eliminar
+                    </a>
+                </td>
+            </tr>
+        }
     </tbody>
 </table>
