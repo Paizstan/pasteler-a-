@@ -21,11 +21,58 @@ namespace SistemadePasteleria.Controllers
         }
 
         // GET: Productos
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string? buscar)
         {
-            var pasteldbContext = _context.Productos.Include(p => p.Categoria);
-            return View(await pasteldbContext.ToListAsync());
+            var query = _context.Productos
+                .Include(p => p.Categoria)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(buscar))
+            {
+                // Búsqueda por nombre y categoría (LIKE)
+                var term = $"%{buscar.Trim()}%";
+                query = query.Where(p =>
+                    EF.Functions.Like(p.Nombre, term) ||
+                    (p.Categoria != null && EF.Functions.Like(p.Categoria.Nombre, term))
+                );
+            }
+
+
+            // Opcional: ordena para resultados consistentes
+            query = query.OrderBy(p => p.Nombre);
+
+            var resultado = await query.ToListAsync();
+
+            // Para que el input conserve el valor
+            ViewData["buscar"] = buscar;
+            return View(resultado);
         }
+
+        [HttpGet]
+        public async Task<IActionResult> Buscar(string? term)
+        {
+            var query = _context.Productos
+                .Include(p => p.Categoria)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(term))
+            {
+                var like = $"%{term.Trim()}%";
+                query = query.Where(p =>
+                    EF.Functions.Like(p.Nombre, like) ||
+                    (p.Categoria != null && EF.Functions.Like(p.Categoria.Nombre, like))
+                );
+            }
+
+            var resultados = await query
+                .OrderBy(p => p.Nombre)
+                .ToListAsync();
+
+            // Devuelve solo las filas <tr> (partial)
+            return PartialView("_ProductosRows", resultados);
+        }
+
+
 
         // GET: Productos/Details/5
         public async Task<IActionResult> Details(int? id)
@@ -96,85 +143,74 @@ namespace SistemadePasteleria.Controllers
         // GET: Productos/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var producto = await _context.Productos.FindAsync(id);
-            if (producto == null)
-            {
-                return NotFound();
-            }
-            ViewData["CategoriaId"] = new SelectList(_context.Categorias, "Id", "Id", producto.CategoriaId);
+            if (producto == null) return NotFound();
+
+            // Muestra nombres en el combo
+            ViewData["CategoriaId"] = new SelectList(_context.Categorias, "Id", "Nombre", producto.CategoriaId);
             return View(producto);
         }
 
         // POST: Productos/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, Producto producto, IFormFile imagenInput)
+        public async Task<IActionResult> Edit(int id, Producto formModel, IFormFile? imagenInput)
         {
-            if (id != producto.Id)
-                return NotFound();
+            if (id != formModel.Id) return NotFound();
 
-            if (ModelState.IsValid)
+            var productoDb = await _context.Productos.FirstOrDefaultAsync(p => p.Id == id);
+            if (productoDb == null) return NotFound();
+
+            // 1) Actualiza solo los campos permitidos (lista blanca)
+            //    Evita sobreposting (no tocaremos ImagenUrl aquí)
+            if (!await TryUpdateModelAsync(productoDb, prefix: "",
+                p => p.Nombre, p => p.Precio, p => p.Stock, p => p.CategoriaId))
             {
-                try
-                {
-                    if (imagenInput != null && imagenInput.Length > 0)
-                    {
-                        var ruta = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "imagenes");
-                        if (!Directory.Exists(ruta))
-                        {
-                            Directory.CreateDirectory(ruta);
-                        }
-
-                        var nombreArchivo = Guid.NewGuid().ToString() + Path.GetExtension(imagenInput.FileName);
-                        var rutaCompleta = Path.Combine(ruta, nombreArchivo);
-
-                        using (var stream = new FileStream(rutaCompleta, FileMode.Create))
-                        {
-                            await imagenInput.CopyToAsync(stream);
-                        }
-
-                        producto.ImagenUrl = "/imagenes/" + nombreArchivo;
-                    }
-
-                    _context.Update(producto);
-                    await _context.SaveChangesAsync();
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!_context.Productos.Any(p => p.Id == producto.Id))
-                        return NotFound();
-                    else
-                        throw;
-                }
+                ViewData["CategoriaId"] = new SelectList(_context.Categorias, "Id", "Nombre", productoDb.CategoriaId);
+                return View(productoDb);
             }
 
-            ViewData["CategoriaId"] = new SelectList(_context.Categorias, "Id", "Nombre", producto.CategoriaId);
-            return View(producto);
+            // 2) Imagen: conserva si no suben nueva; si suben, guarda y borra la anterior
+            if (imagenInput != null && imagenInput.Length > 0)
+            {
+                var rutaCarpeta = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "imagenes");
+                if (!Directory.Exists(rutaCarpeta))
+                    Directory.CreateDirectory(rutaCarpeta);
+
+                var nombreArchivo = Guid.NewGuid().ToString() + Path.GetExtension(imagenInput.FileName);
+                var rutaCompleta = Path.Combine(rutaCarpeta, nombreArchivo);
+
+                using (var stream = new FileStream(rutaCompleta, FileMode.Create))
+                    await imagenInput.CopyToAsync(stream);
+
+                // Guarda nueva ruta
+                var imagenAnterior = productoDb.ImagenUrl;
+                productoDb.ImagenUrl = "/imagenes/" + nombreArchivo;
+
+                await _context.SaveChangesAsync(); // primero DB
+
+                // luego borra archivo anterior si existía
+                EliminarArchivoFisico(imagenAnterior);
+                return RedirectToAction(nameof(Index));
+            }
+
+            // No hay nueva imagen -> conserva la actual tal cual
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: Productos/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var producto = await _context.Productos
                 .Include(p => p.Categoria)
                 .FirstOrDefaultAsync(m => m.Id == id);
-            if (producto == null)
-            {
-                return NotFound();
-            }
+
+            if (producto == null) return NotFound();
 
             return View(producto);
         }
@@ -184,15 +220,40 @@ namespace SistemadePasteleria.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var producto = await _context.Productos.FindAsync(id);
+            var producto = await _context.Productos.FirstOrDefaultAsync(p => p.Id == id);
             if (producto != null)
             {
+                var rutaImagen = producto.ImagenUrl;
                 _context.Productos.Remove(producto);
+                await _context.SaveChangesAsync(); // primero DB
+
+                // luego intenta borrar archivo físico (si hay)
+                EliminarArchivoFisico(rutaImagen);
             }
 
-            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
+
+        // -------- Helper privado --------
+        private void EliminarArchivoFisico(string? imagenUrl)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(imagenUrl)) return;
+
+                // imagenUrl viene como "/imagenes/xxx.ext"
+                var relative = imagenUrl.TrimStart('/');
+                var fullPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", relative);
+
+                if (System.IO.File.Exists(fullPath))
+                    System.IO.File.Delete(fullPath);
+            }
+            catch
+            {
+                // Opcional: loguear. No interrumpir UX si falla el borrado físico.
+            }
+        }
+
 
         private bool ProductoExists(int id)
         {

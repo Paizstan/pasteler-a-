@@ -8,14 +8,19 @@
     <i class="bi bi-cake2-fill me-2"></i>Gestión de Productos
 </h1>
 
-
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <a asp-action="Create" class="btn btn-outline-dark  px-4 py-2">
+    <a asp-action="Create" class="btn btn-outline-dark px-4 py-2">
         <i class="bi bi-plus-lg"></i> Crear nuevo producto
     </a>
 
+    <!-- Búsqueda: mantiene búsqueda por GET y además activa búsqueda en vivo -->
     <form asp-action="Index" method="get" class="d-flex" role="search">
-        <input type="text" name="buscar" class="form-control me-2" placeholder="Buscar producto..." />
+        <input id="inputBuscar"
+               type="text"
+               name="buscar"
+               class="form-control me-2"
+               placeholder="Buscar producto..."
+               value="@(ViewData["buscar"] as string)" />
         <button type="submit" class="btn btn-outline-primary">
             <i class="bi bi-search"></i>
         </button>
@@ -33,40 +38,62 @@
             <th>Acciones</th>
         </tr>
     </thead>
-    <tbody>
-        @foreach (var item in Model)
-        {
-            <tr>
-                <td class="align-middle">@item.Nombre</td>
-                <td class="align-middle">@item.Precio.ToString("C")</td>
-                <td class="align-middle">@item.Stock</td>
-                <td class="align-middle">
-                    @if (!string.IsNullOrEmpty(item.ImagenUrl))
-                    {
-                        <img src="@item.ImagenUrl" width="70" height="70"
-                             style="border-radius: 8px; object-fit: cover; transition: transform 0.3s;"
-                             onmouseover="this.style.transform='scale(1.6)'"
-                             onmouseout="this.style.transform='scale(1)'"
-                             title="Ver imagen" />
-                    }
-                    else
-                    {
-                        <span class="text-muted">No hay imagen</span>
-                    }
-                </td>
-                <td class="align-middle">@item.Categoria?.Nombre</td>
-                <td class="align-middle">
-                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-warning btn-sm me-1">
-                        <i class="bi bi-pencil"></i> Editar
-                    </a>
-                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-info btn-sm me-1">
-                        <i class="bi bi-info-circle"></i> Detalles
-                    </a>
-                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-outline-danger btn-sm">
-                        <i class="bi bi-trash"></i> Eliminar
-                    </a>
-                </td>
-            </tr>
-        }
+
+    <!-- El cuerpo de la tabla se actualiza por AJAX -->
+    <tbody id="tbodyProductos">
+        @Html.Partial("_ProductosRows", Model)
     </tbody>
 </table>
+
+@section Scripts {
+    <script>
+        (function () {
+            const input = document.getElementById('inputBuscar');
+            const tbody = document.getElementById('tbodyProductos');
+            let timer = null;
+            let lastTerm = input ? (input.value || '').trim() : '';
+
+            function debounce(fn, delay) {
+                return function (...args) {
+                    clearTimeout(timer);
+                    timer = setTimeout(() => fn.apply(this, args), delay);
+                };
+            }
+
+            async function buscar(term) {
+                try {
+                    // Spinner simple mientras carga
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="text-center">
+                                <div class="spinner-border" role="status" aria-label="Cargando resultados"></div>
+                            </td>
+                        </tr>`;
+
+                    const url = '@Url.Action("Buscar", "Productos")' + '?term=' + encodeURIComponent(term || '');
+                    const resp = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                    if (!resp.ok) throw new Error('Error al cargar resultados');
+                    const html = await resp.text();
+                    tbody.innerHTML = html;
+                } catch (e) {
+                    console.error(e);
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="text-center text-danger">Ocurrió un error al buscar.</td>
+                        </tr>`;
+                }
+            }
+
+            const onInput = debounce((ev) => {
+                const term = (ev.target.value || '').trim();
+                if (term === lastTerm) return; // evita llamadas redundantes
+                lastTerm = term;
+                buscar(term);
+            }, 300); // 300ms es un buen equilibrio
+
+            if (input) {
+                input.addEventListener('input', onInput);
+            }
+        })();
+    </script>
+}
