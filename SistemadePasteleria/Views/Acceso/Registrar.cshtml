@@ -1,0 +1,30 @@
+﻿@{
+    ViewData["Title"] = "Registrarse";
+}
+
+<div class="container mt-5 d-flex justify-content-center">
+    <div class="card shadow p-4" style="width: 400px;">
+        <h3 class="text-center mb-4">Crear Cuenta</h3>
+
+        @if (ViewBag.Error != null)
+        {
+            <div class="alert alert-danger text-center">@ViewBag.Error</div>
+        }
+
+        <form asp-action="Registrar" method="post">
+            <div class="mb-3">
+                <label for="Nombre" class="form-label">Nombre de Usuario</label>
+                <input type="text" class="form-control" name="Nombre" required />
+            </div>
+            <div class="mb-3">
+                <label for="PasswordHash" class="form-label">Contraseña</label>
+                <input type="password" class="form-control" name="PasswordHash" required />
+            </div>
+            <button type="submit" class="btn btn-success w-100">Registrarse</button>
+        </form>
+
+        <div class="text-center mt-3">
+            <a asp-controller="Acceso" asp-action="Index">← Volver al Login</a>
+        </div>
+    </div>
+</div>
