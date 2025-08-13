@@ -1,10 +1,14 @@
 using SistemadePasteleria.Models;// LINEA AGREGADA
 using Microsoft.EntityFrameworkCore; // LINEA AGREGADA
 using Microsoft.AspNetCore.Authentication.Cookies;
+using QuestPDF.Infrastructure;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+QuestPDF.Settings.License = LicenseType.Community;
 
 // AGREGAR DESDE AQUÍ
 builder.Services.AddDbContext<PasteldbContext>(o =>
