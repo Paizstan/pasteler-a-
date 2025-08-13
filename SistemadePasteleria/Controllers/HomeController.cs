@@ -5,7 +5,7 @@ using SistemadePasteleria.Models;
 
 namespace SistemadePasteleria.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Administrador,Empleado")]
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;

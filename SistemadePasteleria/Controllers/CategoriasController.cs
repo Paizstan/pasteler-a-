@@ -10,7 +10,7 @@ using SistemadePasteleria.Models;
 
 namespace SistemadePasteleria.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Administrador")]
     public class CategoriasController : Controller
     {
         private readonly PasteldbContext _context;

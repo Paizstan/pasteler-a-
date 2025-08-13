@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SistemadePasteleria.Models;
 
 namespace SistemadePasteleria.Controllers
 {
+    [Authorize(Roles = "Administrador")]
     public class ReportesController : Controller
     {
         private readonly PasteldbContext _context;
