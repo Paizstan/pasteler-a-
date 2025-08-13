@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
 using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
 
 public class AccesoController : Controller
 {
@@ -14,33 +16,48 @@ public class AccesoController : Controller
         _context = context;
     }
 
+    // Método para encriptar contraseñas con SHA256
+    private string HashPassword(string password)
+    {
+        using (SHA256 sha256 = SHA256.Create())
+        {
+            byte[] bytes = Encoding.UTF8.GetBytes(password);
+            byte[] hashBytes = sha256.ComputeHash(bytes);
+
+            StringBuilder builder = new StringBuilder();
+            foreach (var b in hashBytes)
+            {
+                builder.Append(b.ToString("x2"));
+            }
+            return builder.ToString();
+        }
+    }
+
     // GET: Login
     public IActionResult Index()
     {
         return View();
     }
 
-    [HttpPost]
+    // POST: Login
     [HttpPost]
     public async Task<IActionResult> Login(string Nombre, string PasswordHash)
     {
+        string passwordHasheada = HashPassword(PasswordHash);
+
         var usuario = _context.Usuarios.Include(u => u.Rol)
-            .FirstOrDefault(u => u.Nombre == Nombre && u.PasswordHash == PasswordHash);
+            .FirstOrDefault(u => u.Nombre == Nombre && u.PasswordHash == passwordHasheada);
 
         if (usuario != null)
         {
-            // Crear la identidad
             var claims = new List<Claim>
-        {
-            new Claim(ClaimTypes.Name, usuario.Nombre),
-            new Claim(ClaimTypes.Role, usuario.Rol.Nombre)
-        };
+            {
+                new Claim(ClaimTypes.Name, usuario.Nombre),
+                new Claim(ClaimTypes.Role, usuario.Rol.Nombre)
+            };
 
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            var authProperties = new AuthenticationProperties
-            {
-                IsPersistent = true
-            };
+            var authProperties = new AuthenticationProperties { IsPersistent = true };
 
             await HttpContext.SignInAsync(
                 CookieAuthenticationDefaults.AuthenticationScheme,
@@ -48,7 +65,7 @@ public class AccesoController : Controller
                 authProperties
             );
 
-            return RedirectToAction("Index", "Home"); // ✔️ Redirige al Home
+            return RedirectToAction("Index", "Home");
         }
 
         ViewBag.Error = "Usuario o contraseña inválidos.";
@@ -61,21 +78,28 @@ public class AccesoController : Controller
         return View();
     }
 
+    // POST: Registrar
     [HttpPost]
     public IActionResult Registrar(string Nombre, string PasswordHash)
     {
-        // Verifica si ya existe
         if (_context.Usuarios.Any(u => u.Nombre == Nombre))
         {
             ViewBag.Error = "Este nombre de usuario ya existe.";
             return View();
         }
 
+        var rolEmpleado = _context.Roles.FirstOrDefault(r => r.Nombre == "Empleado");
+        if (rolEmpleado == null)
+        {
+            ViewBag.Error = "No se encontró el rol 'Empleado'.";
+            return View();
+        }
+
         var nuevo = new Usuario
         {
             Nombre = Nombre,
-            PasswordHash = PasswordHash,
-            RolId = 1 // Suponiendo 1 = Empleado
+            PasswordHash = HashPassword(PasswordHash), // 🔹 Guardado encriptado
+            RolId = rolEmpleado.Id
         };
 
         _context.Usuarios.Add(nuevo);
@@ -83,6 +107,8 @@ public class AccesoController : Controller
 
         return RedirectToAction("Index");
     }
+
+    // GET: Logout
     [HttpGet]
     public async Task<IActionResult> Logout()
     {

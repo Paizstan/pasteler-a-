@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - SistemadePasteleria</title>
+    <title>@ViewData["Title"] - VIDA MÍA</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/SistemadePasteleria.styles.css" asp-append-version="true" />
@@ -15,13 +15,15 @@
 
 @{
     var nombreUsuario = HttpContextAccessor.HttpContext?.User?.Identity?.Name;
+    var esAdmin = HttpContextAccessor.HttpContext?.User?.IsInRole("Administrador") ?? false;
+    var esEmpleado = HttpContextAccessor.HttpContext?.User?.IsInRole("Empleado") ?? false;
 }
 
 <body>
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">SistemadePasteleria</a>
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">VIDA MÍA</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -31,26 +33,32 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index"><i class="bi bi-house-heart-fill"></i> Inicio</a>
                         </li>
+                        @if (esAdmin)
+                        {
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Categorias" asp-action="Index">Categorias</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Categorias" asp-action="Index"><i class="bi bi-bookmark-star-fill"></i> Categorias</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Productos" asp-action="Index"><i class="bi bi-cake-fill"></i> Productos</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Clientes" asp-action="Index">Clientes</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Clientes" asp-action="Index"><i class="bi bi-person-vcard-fill"></i> Clientes</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Pedidoes" asp-action="Index">Pedidos</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Reportes" asp-action="VolumenVentas"><i class="bi bi-clipboard-data-fill"></i> Volumen de Ventas</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Reportes" asp-action="VolumenVentas">Volumen de Ventas</a>
-                        </li>
+                        }
+                        @if (esAdmin || esEmpleado)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Pedidoes" asp-action="Index"><i class="bi bi-clipboard-heart-fill"></i> Pedidos</a>
+                            </li>
+                        }
                     </ul>
                     @if (!string.IsNullOrEmpty(nombreUsuario))
                     {
                         <div class="d-flex align-items-center">
-                            <span class="me-2">Bienvenido, <strong>@nombreUsuario</strong></span>
+                            <span class="me-2"> Usuario <strong>@nombreUsuario</strong></span>
                             <a asp-controller="Acceso" asp-action="Logout" class="btn btn-outline-danger btn-sm">Cerrar sesión</a>
                         </div>
                     }

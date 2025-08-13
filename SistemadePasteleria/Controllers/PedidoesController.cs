@@ -11,7 +11,7 @@ using SistemadePasteleria.Models.ViewModels;
 
 namespace SistemadePasteleria.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Administrador,Empleado")]
     public class PedidoesController : Controller
     {
         private readonly PasteldbContext _context;
