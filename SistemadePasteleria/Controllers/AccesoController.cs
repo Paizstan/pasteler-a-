@@ -88,7 +88,7 @@ public class AccesoController : Controller
             return View();
         }
 
-        var rolEmpleado = _context.Roles.FirstOrDefault(r => r.Nombre == "Administrador");
+        var rolEmpleado = _context.Roles.FirstOrDefault(r => r.Nombre == "Empleado");
         if (rolEmpleado == null)
         {
             ViewBag.Error = "No se encontró el rol 'Empleado'.";
