@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using SistemadePasteleria.Models;
+using SistemadePasteleria.Utilidades;
+
 
 namespace SistemadePasteleria.Controllers
 {
@@ -22,7 +24,7 @@ namespace SistemadePasteleria.Controllers
 
         // GET: Clientes
         // GET: Clientes
-        public async Task<IActionResult> Index(string busqueda, int pagina = 1, int tamanoPagina = 5)
+        public async Task<IActionResult> Index(string busqueda, int pagina = 1)
         {
             var query = _context.Clientes.AsQueryable();
 
@@ -31,19 +33,20 @@ namespace SistemadePasteleria.Controllers
                 query = query.Where(c => c.Nombre.Contains(busqueda) || c.Correo.Contains(busqueda));
             }
 
-            var totalRegistros = await query.CountAsync();
+            int totalRegistros = await query.CountAsync();
+            var paginacion = new Paginacion(totalRegistros, pagina, 5, "Clientes", "Index");
 
             var clientes = await query
-                .Skip((pagina - 1) * tamanoPagina)
-                .Take(tamanoPagina)
+                .Skip(paginacion.Salto)
+                .Take(paginacion.RegistrosPagina)
                 .ToListAsync();
 
-            ViewBag.TotalPaginas = (int)Math.Ceiling((double)totalRegistros / tamanoPagina);
-            ViewBag.PaginaActual = pagina;
+            ViewBag.Paginacion = paginacion;
             ViewBag.Busqueda = busqueda;
 
             return View(clientes);
         }
+
 
         // GET: Clientes/Details/5
         public async Task<IActionResult> Details(int? id)

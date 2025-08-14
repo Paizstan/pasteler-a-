@@ -1,0 +1,40 @@
+﻿@model SistemadePasteleria.Utilidades.Paginacion
+
+<div class="container">
+    @if (Model.TotalPaginas > 0)
+    {
+        <ul class="pagination justify-content-end">
+
+            <!-- Botón Primera y Anterior -->
+            @if (Model.PaginaActual > 1)
+            {
+                <li class="page-item">
+                    <a class="page-link" asp-controller="@(Model.Controlador)" asp-action="@(Model.Accion)" asp-route-pagina="1">Primera</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" asp-controller="@(Model.Controlador)" asp-action="@(Model.Accion)" asp-route-pagina="@(Model.PaginaActual - 1)">Anterior</a>
+                </li>
+            }
+
+            <!-- Páginas intermedias -->
+            @for (var pge = Model.PaginaInicio; pge <= Model.UltimaPagina; pge++)
+            {
+                <li class="page-item @(pge == Model.PaginaActual ? "active" : "")">
+                    <a class="page-link" asp-controller="@(Model.Controlador)" asp-action="@(Model.Accion)" asp-route-pagina="@pge">@pge</a>
+                </li>
+            }
+
+            <!-- Botón Siguiente y Última -->
+            @if (Model.PaginaActual < Model.TotalPaginas)
+            {
+                <li class="page-item">
+                    <a class="page-link" asp-controller="@(Model.Controlador)" asp-action="@(Model.Accion)" asp-route-pagina="@(Model.PaginaActual + 1)">Siguiente</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" asp-controller="@(Model.Controlador)" asp-action="@(Model.Accion)" asp-route-pagina="@(Model.TotalPaginas)">Última</a>
+                </li>
+            }
+
+        </ul>
+    }
+</div>
