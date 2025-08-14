@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using SistemadePasteleria.Models;
+using SistemadePasteleria.Utilidades;
 
 namespace SistemadePasteleria.Controllers
 {
@@ -21,9 +22,27 @@ namespace SistemadePasteleria.Controllers
         }
 
         // GET: Categorias
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string busqueda, int pagina = 1)
         {
-            return View(await _context.Categorias.ToListAsync());
+            var query = _context.Categorias.AsQueryable();
+
+            if (!string.IsNullOrEmpty(busqueda))
+            {
+                query = query.Where(c => c.Nombre.Contains(busqueda));
+            }
+
+            int totalRegistros = await query.CountAsync();
+            var paginacion = new Paginacion(totalRegistros, pagina, 5, "Categorias", "Index");
+
+            var categorias = await query
+                .Skip(paginacion.Salto)
+                .Take(paginacion.RegistrosPagina)
+                .ToListAsync();
+
+            ViewBag.Paginacion = paginacion;
+            ViewBag.Busqueda = busqueda;
+
+            return View(categorias);
         }
 
         // GET: Categorias/Details/5
