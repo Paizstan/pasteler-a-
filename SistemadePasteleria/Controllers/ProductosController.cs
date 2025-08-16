@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using SistemadePasteleria.Models;
+using SistemadePasteleria.Utilidades;
 
 namespace SistemadePasteleria.Controllers
 {
@@ -21,11 +22,11 @@ namespace SistemadePasteleria.Controllers
         }
 
         // GET: Productos
-        public async Task<IActionResult> Index(string? buscar)
+        public async Task<IActionResult> Index(string? buscar, int pagina = 1)
         {
             var query = _context.Productos
-                .Include(p => p.Categoria)
-                .AsQueryable();
+        .Include(p => p.Categoria)
+        .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(buscar))
             {
@@ -37,14 +38,23 @@ namespace SistemadePasteleria.Controllers
                 );
             }
 
-
-            // Opcional: ordena para resultados consistentes
+            // Orden para resultados consistentes
             query = query.OrderBy(p => p.Nombre);
 
-            var resultado = await query.ToListAsync();
+            // Paginación
+            int totalRegistros = await query.CountAsync();
+            var paginacion = new Paginacion(totalRegistros, pagina, 5, "Productos", "Index");
 
-            // Para que el input conserve el valor
+            var resultado = await query
+                .Skip(paginacion.Salto)
+                .Take(paginacion.RegistrosPagina)
+                .ToListAsync();
+
+            // Para que el input conserve el valor y vista reciba la info
             ViewData["buscar"] = buscar;
+            ViewBag.Paginacion = paginacion;
+            ViewBag.Busqueda = buscar;
+
             return View(resultado);
         }
 
