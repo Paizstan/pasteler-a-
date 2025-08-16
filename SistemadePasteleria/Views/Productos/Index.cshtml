@@ -4,46 +4,55 @@
     ViewData["Title"] = "Productos";
 }
 
-<h1 class="text-center fw-bold mb-4" style="color: #dc3545;">
-    <i class="bi bi-cake2-fill me-2"></i>Gestión de Productos
-</h1>
+<div class="card shadow-sm p-4" style="background-color: rgba(255, 255, 255, 0.9); border-radius: 12px;">
+    <h2 class="mb-4 text-center" style="color: #6c757d;">
+        <i class="bi bi-cake2-fill me-2"></i> Gestión de Productos
+    </h2>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <a asp-action="Create" class="btn btn-outline-dark px-4 py-2">
-        <i class="bi bi-plus-lg"></i> Crear nuevo producto
-    </a>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <a asp-action="Create"
+           class="btn"
+           style="background-color: #adb5bd; color: white; border-radius: 8px;">
+            ➕ Crear nuevo producto
+        </a>
 
-    <!-- Búsqueda: mantiene búsqueda por GET y además activa búsqueda en vivo -->
-    <form asp-action="Index" method="get" class="d-flex" role="search">
-        <input id="inputBuscar"
-               type="text"
-               name="buscar"
-               class="form-control me-2"
-               placeholder="Buscar producto..."
-               value="@(ViewData["buscar"] as string)" />
-        <button type="submit" class="btn btn-outline-primary">
-            <i class="bi bi-search"></i>
-        </button>
-    </form>
+        <!-- Búsqueda -->
+        <form asp-action="Index" method="get" class="d-flex" role="search">
+            <div class="input-group">
+                <input id="inputBuscar"
+                       type="text"
+                       name="buscar"
+                       class="form-control"
+                       placeholder="Buscar producto..."
+                       value="@(ViewData["buscar"] as string)"
+                       style="border-radius: 8px 0 0 8px;">
+                <button type="submit"
+                        class="btn"
+                        style="background-color: #6c757d; color: white; border-radius: 0 8px 8px 0;">
+                    🔍 Buscar
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <table class="table table-hover table-bordered text-center"
+           style="background-color: white; border-radius: 8px; overflow: hidden;">
+        <thead style="background-color: #e9ecef; color: #6c757d;">
+            <tr>
+                <th>Nombre</th>
+                <th>Precio</th>
+                <th>Stock</th>
+                <th>Imagen</th>
+                <th>Categoría</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody id="tbodyProductos">
+            @Html.Partial("_ProductosRows", Model)
+        </tbody>
+    </table>
+    <partial name="_Paginacion" model="ViewBag.Paginacion" />
 </div>
-
-<table class="table table-hover table-bordered text-center shadow-sm">
-    <thead class="table-dark">
-        <tr>
-            <th>Nombre</th>
-            <th>Precio</th>
-            <th>Stock</th>
-            <th>Imagen</th>
-            <th>Categoría</th>
-            <th>Acciones</th>
-        </tr>
-    </thead>
-
-    <!-- El cuerpo de la tabla se actualiza por AJAX -->
-    <tbody id="tbodyProductos">
-        @Html.Partial("_ProductosRows", Model)
-    </tbody>
-</table>
 
 @section Scripts {
     <script>
@@ -62,13 +71,12 @@
 
             async function buscar(term) {
                 try {
-                    // Spinner simple mientras carga
                     tbody.innerHTML = `
-                        <tr>
-                            <td colspan="6" class="text-center">
-                                <div class="spinner-border" role="status" aria-label="Cargando resultados"></div>
-                            </td>
-                        </tr>`;
+                                <tr>
+                                    <td colspan="6" class="text-center">
+                                        <div class="spinner-border" role="status" aria-label="Cargando resultados"></div>
+                                    </td>
+                                </tr>`;
 
                     const url = '@Url.Action("Buscar", "Productos")' + '?term=' + encodeURIComponent(term || '');
                     const resp = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
@@ -78,18 +86,18 @@
                 } catch (e) {
                     console.error(e);
                     tbody.innerHTML = `
-                        <tr>
-                            <td colspan="6" class="text-center text-danger">Ocurrió un error al buscar.</td>
-                        </tr>`;
+                                <tr>
+                                    <td colspan="6" class="text-center text-danger">Ocurrió un error al buscar.</td>
+                                </tr>`;
                 }
             }
 
             const onInput = debounce((ev) => {
                 const term = (ev.target.value || '').trim();
-                if (term === lastTerm) return; // evita llamadas redundantes
+                if (term === lastTerm) return;
                 lastTerm = term;
                 buscar(term);
-            }, 300); // 300ms es un buen equilibrio
+            }, 300);
 
             if (input) {
                 input.addEventListener('input', onInput);

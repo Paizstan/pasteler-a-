@@ -4,53 +4,64 @@
     ViewData["Title"] = "Volumen de Ventas";
 }
 
-<h2 class="text-center mb-4" style="color:#d2691e; font-family: 'Segoe UI', cursive;">
-    🍰 Reporte de Ventas por @((ViewBag.Filtro == "mes") ? "Mes" : "Día")
-</h2>
+<div class="card shadow-sm p-4" style="background-color: rgba(255, 255, 255, 0.9); border-radius: 12px;">
+    <h2 class="mb-4 text-center" style="color: #6c757d;">
+        🍰 Reporte de Ventas por @((ViewBag.Filtro == "mes") ? "Mes" : "Día")
+    </h2>
 
-<div class="d-flex justify-content-center mb-4">
-    <form method="get" asp-action="VolumenVentas" class="form-inline" id="filtroForm">
-        <label for="filtro" class="form-label me-2 fw-bold">Filtrar por:</label>
-        <select name="filtro" id="filtro" class="form-select me-2" style="width: 120px;" onchange="document.getElementById('filtroForm').submit();">
-            <option value="dia" selected="@("dia" == ViewBag.Filtro)">Día</option>
-            <option value="mes" selected="@("mes" == ViewBag.Filtro)">Mes</option>
-        </select>
-    </form>    
-</div>
+    <!-- Filtro -->
+    <div class="d-flex justify-content-center mb-4">
+        <form method="get" asp-action="VolumenVentas" class="d-flex" id="filtroForm">
+            <label for="filtro" class="form-label me-2 fw-bold" style="color:#6c757d;">Filtrar por:</label>
+            <select name="filtro" id="filtro"
+                    class="form-select me-2"
+                    style="width: 120px; border-radius: 8px;"
+                    onchange="document.getElementById('filtroForm').submit();">
+                <option value="dia" selected="@("dia" == ViewBag.Filtro)">Día</option>
+                <option value="mes" selected="@("mes" == ViewBag.Filtro)">Mes</option>
+            </select>
+        </form>
+    </div>
 
-<div class="text-center mb-4">
+    <!-- Botón PDF -->
+    <div class="text-center mb-4">
         <a asp-action="GenerarVolumenVentasPdf"
            asp-route-filtro="@ViewBag.Filtro"
-           class="btn btn-outline-danger">
+           class="btn"
+           style="background-color: #adb5bd; color: white; border-radius: 8px;">
             📄 Descargar PDF
         </a>
     </div>
 
-<table class="table table-bordered table-hover shadow-sm" style="background-color:#fffaf2;">
-    <thead class="table-warning text-center">
-        <tr>
-            <th>📅 Fecha</th>
-            <th>📦 Total Pedidos</th>
-            <th>💵 Total Vendido ($)</th>
-        </tr>
-    </thead>
-    <tbody class="text-center">
-        @if (!Model.Any())
-        {
+    <!-- Tabla -->
+    <table class="table table-hover table-bordered text-center"
+           style="background-color: white; border-radius: 8px; overflow: hidden;">
+        <thead style="background-color: #e9ecef; color: #6c757d;">
             <tr>
-                <td colspan="3" class="text-muted">No hay datos disponibles para el filtro seleccionado.</td>
+                <th>📅 Fecha</th>
+                <th>📦 Total Pedidos</th>
+                <th>💵 Total Vendido ($)</th>
             </tr>
-        }
-        else
-        {
-            @foreach (var item in Model)
+        </thead>
+        <tbody>
+            @if (!Model.Any())
             {
                 <tr>
-                    <td>@item.Fecha.ToString("dd/MM/yyyy")</td>
-                    <td>@item.TotalPedidos</td>
-                    <td>$@item.TotalVentas.ToString("F2")</td>
+                    <td colspan="3" class="text-muted">No hay datos disponibles para el filtro seleccionado.</td>
                 </tr>
             }
-        }
-    </tbody>
-</table>
+            else
+            {
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.Fecha.ToString("dd/MM/yyyy")</td>
+                        <td>@item.TotalPedidos</td>
+                        <td>$@item.TotalVentas.ToString("F2")</td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+    <partial name="_Paginacion" model="ViewBag.Paginacion" />
+</div>

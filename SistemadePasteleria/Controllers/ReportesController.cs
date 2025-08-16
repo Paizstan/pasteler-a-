@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SistemadePasteleria.Models;
+using SistemadePasteleria.Utilidades;
 
 
 namespace SistemadePasteleria.Controllers
@@ -17,7 +18,7 @@ namespace SistemadePasteleria.Controllers
         }
 
         // 🔹 Acción para mostrar la vista con los datos (HTML)
-        public async Task<IActionResult> VolumenVentas(string filtro = "dia")
+        public async Task<IActionResult> VolumenVentas(string filtro = "dia", int pagina = 1)
         {
             if (string.IsNullOrEmpty(filtro))
                 filtro = "dia";
@@ -44,6 +45,17 @@ namespace SistemadePasteleria.Controllers
                 })
                 .OrderByDescending(x => x.Fecha)
                 .ToList();
+
+            // 🔹 Paginación
+            int totalRegistros = datos.Count();
+            var paginacion = new Paginacion(totalRegistros, pagina, 10, "Reportes", "VolumenVentas");
+
+            var datosPaginados = datos
+                .Skip(paginacion.Salto)
+                .Take(paginacion.RegistrosPagina)
+                .ToList();
+
+            ViewBag.Paginacion = paginacion;
 
             return View(datos); // Esto carga VolumenVentas.cshtml
         }

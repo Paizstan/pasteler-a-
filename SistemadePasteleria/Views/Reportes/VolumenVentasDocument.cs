@@ -21,7 +21,11 @@ public class VolumenVentasDocument : IDocument
         container.Page(page =>
         {
             page.Margin(30);
-            page.Header().Text($"Reporte de Volumen de Ventas por {_filtro.ToUpper()}").FontSize(20).Bold();
+            page.Size(PageSizes.A4);
+
+            page.Header().Text($"🍰 Reporte de Volumen de Ventas por {_filtro.ToUpper()}")
+                .FontSize(20).Bold().FontColor(Colors.Brown.Darken2);
+
             page.Content().Table(table =>
             {
                 table.ColumnsDefinition(columns =>
@@ -31,20 +35,34 @@ public class VolumenVentasDocument : IDocument
                     columns.RelativeColumn();
                 });
 
+                // Encabezado con fondo gris
                 table.Header(header =>
                 {
-                    header.Cell().Text("Fecha").Bold();
-                    header.Cell().Text("Pedidos").Bold();
-                    header.Cell().Text("Total Vendido").Bold();
+                    header.Cell().Background(Colors.Grey.Lighten2).Padding(6).Text("Fecha").Bold();
+                    header.Cell().Background(Colors.Grey.Lighten2).Padding(6).Text("Pedidos").Bold();
+                    header.Cell().Background(Colors.Grey.Lighten2).Padding(6).Text("Total Vendido").Bold();
                 });
 
+                // Filas con estilo (colores alternados)
+                bool alt = false;
                 foreach (var item in _datos)
                 {
-                    table.Cell().Text(item.Fecha.ToString("dd/MM/yyyy"));
-                    table.Cell().Text(item.TotalPedidos.ToString());
-                    table.Cell().Text($"${item.TotalVentas:F2}");
+                    var bg = alt ? Colors.Grey.Lighten5 : Colors.White;
+                    alt = !alt;
+
+                    var fechaTexto = _filtro == "mes"
+                        ? item.Fecha.ToString("MM/yyyy")
+                        : item.Fecha.ToString("dd/MM/yyyy");
+
+                    table.Cell().Background(bg).Padding(6).Text(fechaTexto);
+                    table.Cell().Background(bg).Padding(6).AlignMiddle().AlignCenter().Text(item.TotalPedidos.ToString());
+                    table.Cell().Background(bg).Padding(6).AlignRight().Text($"${item.TotalVentas:F2}");
                 }
             });
+
+            page.Footer().AlignCenter()
+                .Text($"Generado el {DateTime.Now:dd/MM/yyyy HH:mm}")
+                .FontSize(9).FontColor(Colors.Grey.Medium);
         });
     }
 
