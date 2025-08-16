@@ -7,14 +7,19 @@ public partial class Pedido
 {
     public int Id { get; set; }
 
-    public DateTime Fecha { get; set; }
-
+    public DateOnly Fecha { get; set; }
 
     public decimal Total { get; set; }
 
     public int ClienteId { get; set; }
 
     public int UsuarioId { get; set; }
+
+    public decimal? Abono { get; set; }
+
+    public DateTime? FechaEstimada { get; set; }
+
+    public string? Estado { get; set; }
 
     public virtual Cliente Cliente { get; set; } = null!;
 
