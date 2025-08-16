@@ -35,7 +35,7 @@ namespace SistemadePasteleria.Controllers
             var datos = pedidos
                 .GroupBy(p => filtro == "mes"
                     ? new DateTime(p.Fecha.Year, p.Fecha.Month, 1)
-                    : p.Fecha.Date)
+                    : p.Fecha.ToDateTime(TimeOnly.MinValue)) // ← FIX aquí
                 .Select(g => new VolumenVentasModel
                 {
                     Fecha = g.Key,
@@ -65,7 +65,7 @@ namespace SistemadePasteleria.Controllers
             var datos = pedidos
                 .GroupBy(p => filtro == "mes"
                     ? new DateTime(p.Fecha.Year, p.Fecha.Month, 1)
-                    : p.Fecha.Date)
+                    : p.Fecha.ToDateTime(TimeOnly.MinValue)) // ← FIX aquí
                 .Select(g => new VolumenVentasModel
                 {
                     Fecha = g.Key,

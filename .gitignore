@@ -10,3 +10,5 @@ obj/
 .env
 **/appsettings.json
 **/PastelDbContext.cs
+/SistemadePasteleria/wwwroot/css/.editorconfig
+/SistemadePasteleria/wwwroot/css/pedidos.cs
