@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SistemadePasteleria.Models;
+using SistemadePasteleria.ViewModels;
 
 namespace SistemadePasteleria.Controllers
 {
@@ -42,38 +43,116 @@ namespace SistemadePasteleria.Controllers
             return View(pedido);
         }
 
+
         // GET: Pedidos/Create
         public IActionResult Create()
         {
-            ViewData["Clientes"] = _context.Clientes.ToList();
-            ViewData["Usuarios"] = _context.Usuarios.ToList();
+            ViewBag.Clientes = _context.Clientes
+                .Select(c => new { c.Id, c.Nombre })
+                .ToList();
 
-            // Lista de estados
-            ViewData["Estados"] = new List<string> { "Pendiente", "En proceso", "Entregado" };
+            ViewBag.Usuarios = _context.Usuarios
+                .Select(u => new { u.Id, u.Nombre })
+                .ToList();
 
-            return View();
+            // Necesitamos Productos para el detalle
+            ViewBag.Productos = _context.Productos
+                .Select(p => new { p.Id, p.Nombre, p.Precio })
+                .ToList();
+
+            ViewBag.Estados = new List<string> { "Pendiente", "En proceso", "Entregado" };
+
+            return View(new PedidoCreateVM());
         }
 
         // POST: Pedidos/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Pedido pedido)
+        public async Task<IActionResult> Create(PedidoCreateVM vm)
         {
-            if (ModelState.IsValid)
+            // Repoblar selects si algo falla
+            void FillBags()
             {
-                // Si usas DateOnly lo convierto desde DateTime.Now
-                pedido.Fecha = DateOnly.FromDateTime(DateTime.Now);
-
-                _context.Add(pedido);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                ViewBag.Clientes = _context.Clientes.Select(c => new { c.Id, c.Nombre }).ToList();
+                ViewBag.Usuarios = _context.Usuarios.Select(u => new { u.Id, u.Nombre }).ToList();
+                ViewBag.Productos = _context.Productos.Select(p => new { p.Id, p.Nombre, p.Precio }).ToList();
+                ViewBag.Estados = new List<string> { "Pendiente", "En proceso", "Entregado" };
             }
 
-            ViewData["Clientes"] = _context.Clientes.ToList();
-            ViewData["Usuarios"] = _context.Usuarios.ToList();
-            ViewData["Estados"] = new List<string> { "Pendiente", "En proceso", "Entregado" };
+            if (!ModelState.IsValid)
+            {
+                FillBags();
+                return View(vm);
+            }
 
-            return View(pedido);
+            if (vm.Detalles == null || !vm.Detalles.Any(d => d.Cantidad > 0))
+            {
+                ModelState.AddModelError(string.Empty, "Agrega al menos un producto.");
+                FillBags();
+                return View(vm);
+            }
+
+            // Tomamos los ids de productos involucrados
+            var ids = vm.Detalles.Where(d => d.Cantidad > 0).Select(d => d.ProductoId).Distinct().ToList();
+
+            // Traemos precios de BD (nunca confiamos en el precio que venga del cliente)
+            var precios = await _context.Productos
+                .Where(p => ids.Contains(p.Id))
+                .Select(p => new { p.Id, p.Precio })
+                .ToListAsync();
+
+            using var tx = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                var pedido = new Pedido
+                {
+                    Fecha = DateOnly.FromDateTime(DateTime.Now),
+                    ClienteId = vm.ClienteId,
+                    UsuarioId = vm.UsuarioId,
+                    Abono = vm.Abono,
+                    FechaEstimada = vm.FechaEstimada,
+                    Estado = string.IsNullOrWhiteSpace(vm.Estado) ? "Pendiente" : vm.Estado,
+                    Total = 0m
+                };
+
+                _context.Pedidos.Add(pedido);
+                await _context.SaveChangesAsync();
+
+                decimal total = 0m;
+                var detallesEntity = new List<DetallePedido>();
+
+                foreach (var d in vm.Detalles.Where(x => x.Cantidad > 0))
+                {
+                    var pr = precios.First(x => x.Id == d.ProductoId).Precio;
+                    var sub = pr * d.Cantidad;
+
+                    detallesEntity.Add(new DetallePedido
+                    {
+                        PedidoId = pedido.Id,
+                        ProductoId = d.ProductoId,
+                        Cantidad = d.Cantidad,
+                        PrecioUnitario = pr,
+                        Subtotal = sub
+                    });
+
+                    total += sub;
+                }
+
+                _context.DetallePedidos.AddRange(detallesEntity);
+                pedido.Total = total;
+
+                await _context.SaveChangesAsync();
+                await tx.CommitAsync();
+
+                return RedirectToAction(nameof(Index));
+            }
+            catch
+            {
+                await tx.RollbackAsync();
+                ModelState.AddModelError(string.Empty, "Ocurrió un error al guardar el pedido.");
+                FillBags();
+                return View(vm);
+            }
         }
 
         // GET: Pedidos/Edit/5

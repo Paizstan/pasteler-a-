@@ -1,50 +1,228 @@
-﻿@model SistemadePasteleria.Models.Pedido
-
+﻿@model SistemadePasteleria.ViewModels.PedidoCreateVM
+@using System.Globalization
 @{
-    ViewData["Title"] = "Crear Pedido";
-    var clientes = ViewData["Clientes"] as List<SistemadePasteleria.Models.Cliente>;
-    var usuarios = ViewData["Usuarios"] as List<SistemadePasteleria.Models.Usuario>;
-    var estados = ViewData["Estados"] as List<string>;
+    ViewData["Title"] = "Nuevo pedido";
+
+    // Los cargaremos desde ViewBag que llena el controlador en el GET Create
+    var clientes = (IEnumerable<dynamic>)ViewBag.Clientes ?? Enumerable.Empty<dynamic>();
+    var usuarios = (IEnumerable<dynamic>)ViewBag.Usuarios ?? Enumerable.Empty<dynamic>();
+    var estados = (IEnumerable<string>)ViewBag.Estados ?? new List<string>();
+    var productos = (IEnumerable<dynamic>)ViewBag.Productos ?? Enumerable.Empty<dynamic>();
+
+    var inv = CultureInfo.InvariantCulture;
 }
 
-<h1>Nuevo Pedido</h1>
+<h2 class="mb-2">Nuevo pedido</h2>
+<p class="text-muted">Completa los datos y agrega los productos.</p>
 
-<form asp-action="Create">
-    <div class="form-group">
-        <label>Cliente</label>
-        <select asp-for="ClienteId" class="form-control" asp-items="@(new SelectList(clientes, "Id", "Nombre"))"></select>
+<form asp-action="Create" method="post">
+    @Html.AntiForgeryToken()
+
+    <div class="card p-3 mb-3">
+        <h5 class="mb-3">Datos del pedido</h5>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Cliente</label>
+                <select asp-for="ClienteId" class="form-select" required>
+                    <option value="">-- Seleccione --</option>
+                    @foreach (var c in clientes)
+                    {
+                        <option value="@c.Id">@c.Nombre</option>
+                    }
+                </select>
+                <span asp-validation-for="ClienteId" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Usuario</label>
+                <select asp-for="UsuarioId" class="form-select" required>
+                    <option value="">-- Seleccione --</option>
+                    @foreach (var u in usuarios)
+                    {
+                        <option value="@u.Id">@u.Nombre</option>
+                    }
+                </select>
+                <span asp-validation-for="UsuarioId" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Estado</label>
+                <select asp-for="Estado" class="form-select">
+                    @foreach (var e in estados)
+                    {
+                        <option value="@e" selected="@(Model.Estado == e)">@e</option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Abono</label>
+                <div class="input-group">
+                    <span class="input-group-text">$</span>
+                    <input asp-for="Abono" class="form-control" type="number" min="0" step="0.01" />
+                </div>
+                <span asp-validation-for="Abono" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Fecha estimada (entrega)</label>
+                <input asp-for="FechaEstimada" class="form-control" type="date" />
+            </div>
+        </div>
     </div>
 
-    <div class="form-group">
-        <label>Usuario</label>
-        <select asp-for="UsuarioId" class="form-control" asp-items="@(new SelectList(usuarios, "Id", "Nombre"))"></select>
+    <div class="card p-3 mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h5 class="m-0">Detalle</h5>
+            <button type="button" class="btn btn-outline-primary btn-sm" id="btnAgregar">
+                <i class="bi bi-plus-lg"></i> Agregar línea
+            </button>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th style="width:42%">Producto</th>
+                        <th style="width:14%">Cantidad</th>
+                        <th style="width:18%">Precio</th>
+                        <th style="width:18%">Subtotal</th>
+                        <th style="width:8%"></th>
+                    </tr>
+                </thead>
+                <tbody id="detalle-body">
+                    @for (int i = 0; i < Model.Detalles.Count; i++)
+                    {
+                        <tr class="detalle-row">
+                            <td>
+                                <select name="Detalles[@i].ProductoId" class="form-select producto-select" required>
+                                    <option value="">-- Seleccione --</option>
+                                    @foreach (var p in productos)
+                                    {
+                                        <option value="@p.Id" data-precio="@((decimal)p.Precio)">
+                                            @p.Nombre (@(((decimal)p.Precio).ToString("0.00", inv)))
+                                        </option>
+                                    }
+                                </select>
+                            </td>
+                            <td>
+                                <input name="Detalles[@i].Cantidad" class="form-control cantidad" type="number" min="1" step="1" value="1" required />
+                            </td>
+                            <td>
+                                <input name="Detalles[@i].PrecioUnitario" class="form-control precio" type="number" step="0.01" min="0" value="0.00" readonly />
+                            </td>
+                            <td>
+                                <input name="Detalles[@i].Subtotal" class="form-control subtotal" type="number" step="0.01" min="0" value="0.00" readonly />
+                            </td>
+                            <td class="text-end">
+                                <button type="button" class="btn btn-outline-danger btn-sm quitar">Quitar</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="3" class="text-end fw-bold">TOTAL</td>
+                        <td>
+                            <input id="total-view" class="form-control fw-bold" value="0.00" readonly />
+                        </td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <!-- Campo Total (se recalcula en backend de todos modos) -->
+        <input type="hidden" asp-for="Total" />
     </div>
 
-    <div class="form-group">
-        <label>Estado</label>
-        <select asp-for="Estado" class="form-control">
-            @foreach (var estado in estados)
-            {
-                <option value="@estado">@estado</option>
-            }
-        </select>
+    <div class="d-flex gap-2">
+        <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+        <button type="submit" class="btn btn-primary">Guardar pedido</button>
     </div>
-
-    <div class="form-group">
-        <label>Total</label>
-        <input asp-for="Total" class="form-control" />
-    </div>
-
-    <div class="form-group">
-        <label>Abono</label>
-        <input asp-for="Abono" class="form-control" />
-    </div>
-
-    <div class="form-group">
-        <label>Fecha Estimada</label>
-        <input asp-for="FechaEstimada" type="date" class="form-control" />
-    </div>
-
-    <button type="submit" class="btn btn-primary">Guardar</button>
-    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
 </form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const body = document.getElementById('detalle-body');
+            const btnAgregar = document.getElementById('btnAgregar');
+            const totalView = document.getElementById('total-view');
+
+            function renumerar() {
+                const rows = body.querySelectorAll('tr.detalle-row');
+                rows.forEach((tr, idx) => {
+                    tr.querySelectorAll('input, select').forEach(el => {
+                        const name = el.getAttribute('name');
+                        if (!name) return;
+                        const nuevo = name.replace(/Detalles\[\d+\]/, `Detalles[${idx}]`);
+                        el.setAttribute('name', nuevo);
+                    });
+                });
+            }
+
+            function recalcularFila(tr) {
+                const sel = tr.querySelector('.producto-select');
+                const cant = tr.querySelector('.cantidad');
+                const precio = tr.querySelector('.precio');
+                const subtotal = tr.querySelector('.subtotal');
+
+                const precioBase = parseFloat(sel?.selectedOptions[0]?.dataset?.precio || '0');
+                const q = parseInt(cant.value || '0', 10);
+
+                const pu = isFinite(precioBase) ? precioBase : 0;
+                const st = (isFinite(q) ? q : 0) * pu;
+
+                precio.value = pu.toFixed(2);
+                subtotal.value = st.toFixed(2);
+            }
+
+            function recalcularTotal() {
+                let t = 0;
+                body.querySelectorAll('.subtotal').forEach(input => {
+                    t += parseFloat(input.value || '0');
+                });
+                totalView.value = t.toFixed(2);
+                const hiddenTotal = document.querySelector('input[name="Total"]');
+                if (hiddenTotal) hiddenTotal.value = t.toFixed(2);
+            }
+
+            body.addEventListener('change', (e) => {
+                const tr = e.target.closest('tr.detalle-row');
+                if (!tr) return;
+                if (e.target.classList.contains('producto-select') || e.target.classList.contains('cantidad')) {
+                    recalcularFila(tr);
+                    recalcularTotal();
+                }
+            });
+
+            body.addEventListener('click', (e) => {
+                if (e.target.classList.contains('quitar')) {
+                    const tr = e.target.closest('tr.detalle-row');
+                    tr.remove();
+                    renumerar();
+                    recalcularTotal();
+                }
+            });
+
+            btnAgregar.addEventListener('click', () => {
+                const plantilla = body.querySelector('tr.detalle-row');
+                const clon = plantilla.cloneNode(true);
+
+                // limpiar valores
+                clon.querySelector('.producto-select').selectedIndex = 0;
+                clon.querySelector('.cantidad').value = 1;
+                clon.querySelector('.precio').value = '0.00';
+                clon.querySelector('.subtotal').value = '0.00';
+
+                body.appendChild(clon);
+                renumerar();
+            });
+
+            // cálculo inicial por si hay 1 fila
+            body.querySelectorAll('tr.detalle-row').forEach(tr => recalcularFila(tr));
+            recalcularTotal();
+        })();
+    </script>
+}

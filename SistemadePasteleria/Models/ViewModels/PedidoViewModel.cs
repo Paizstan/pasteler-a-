@@ -1,35 +1,36 @@
-﻿using System;
+﻿// ViewModels/PedidoCreateVM.cs
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
-namespace SistemadePasteleria.Models.ViewModels
+namespace SistemadePasteleria.ViewModels
 {
-    public class PedidoViewModel
+    public class DetalleCreateVM
     {
-        [Required]
-        public int ClienteId { get; set; }
+        [Required] public int ProductoId { get; set; }
+        [Range(1, int.MaxValue, ErrorMessage = "Mínimo 1")] public int Cantidad { get; set; } = 1;
 
-        [Required]
-        public int UsuarioId { get; set; }
-
-        // Aquí puedes agregar más validaciones si deseas
-        public List<ProductoSeleccionado> Productos { get; set; } = new();
-
-        [DisplayFormat(DataFormatString = "{0:C}")]
-        public decimal Total => Productos.Sum(p => p.Cantidad * p.PrecioUnitario);
+        // Estos dos se rellenan en el front solo para vista; en el backend se recalculan.
+        public decimal PrecioUnitario { get; set; }
+        public decimal Subtotal { get; set; }
     }
 
-    public class ProductoSeleccionado
+    public class PedidoCreateVM
     {
-        public int ProductoId { get; set; }
+        [Required] public int ClienteId { get; set; }
+        [Required] public int UsuarioId { get; set; }
 
-        [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar una cantidad válida")]
-        public int Cantidad { get; set; }
+        [Range(0, double.MaxValue)] public decimal? Abono { get; set; }
 
-        public string Nombre { get; set; } = string.Empty;
+        [DataType(DataType.Date)]
+        public DateTime? FechaEstimada { get; set; } = DateTime.Today.AddDays(1);
 
-        public decimal PrecioUnitario { get; set; }
+        [MaxLength(50)]
+        public string? Estado { get; set; } = "Pendiente";
 
-        public decimal Subtotal => Cantidad * PrecioUnitario;
+        // Se calcula en backend
+        public decimal Total { get; set; }
+
+        public List<DetalleCreateVM> Detalles { get; set; } = new() { new DetalleCreateVM() };
     }
 }
