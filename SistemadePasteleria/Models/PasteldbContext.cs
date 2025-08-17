@@ -31,10 +31,14 @@ public partial class PasteldbContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
+<<<<<<< HEAD
 
 
         => optionsBuilder.UseSqlServer("Server=DESKTOP-CM8A4JK\\MSSQLSERVER01;Database=pasteldb;Trusted_Connection=True;TrustServerCertificate=True");
 
+=======
+        => optionsBuilder.UseSqlServer("Server=DESKTOP-CM8A4JK\\MSSQLSERVER01;Database=pasteldb;Trusted_Connection=True;TrustServerCertificate=True;");
+>>>>>>> f660a80b1b69a8b80c8833002eed2faeddd14bee
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -76,6 +80,11 @@ public partial class PasteldbContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PK__Pedidos__3214EC07EF4193EB");
 
+            entity.Property(e => e.Abono).HasColumnType("decimal(10, 2)");
+            entity.Property(e => e.Estado)
+                .HasMaxLength(10)
+                .IsUnicode(false);
+            entity.Property(e => e.FechaEstimada).HasColumnType("datetime");
             entity.Property(e => e.Total).HasColumnType("decimal(10, 2)");
 
             entity.HasOne(d => d.Cliente).WithMany(p => p.Pedidos)

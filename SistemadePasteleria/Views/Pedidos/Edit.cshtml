@@ -1,0 +1,52 @@
+﻿@model SistemadePasteleria.Models.Pedido
+
+@{
+    ViewData["Title"] = "Editar Pedido";
+    var clientes = ViewData["Clientes"] as List<SistemadePasteleria.Models.Cliente>;
+    var usuarios = ViewData["Usuarios"] as List<SistemadePasteleria.Models.Usuario>;
+    var estados = ViewData["Estados"] as List<string>;
+}
+
+<h1>Editar Pedido</h1>
+
+<form asp-action="Edit">
+    <input type="hidden" asp-for="Id" />
+
+    <div class="form-group">
+        <label>Cliente</label>
+        <select asp-for="ClienteId" class="form-control" asp-items="@(new SelectList(clientes, "Id", "Nombre", Model.ClienteId))"></select>
+    </div>
+
+    <div class="form-group">
+        <label>Usuario</label>
+        <select asp-for="UsuarioId" class="form-control" asp-items="@(new SelectList(usuarios, "Id", "Nombre", Model.UsuarioId))"></select>
+    </div>
+
+    <div class="form-group">
+        <label>Estado</label>
+        <select asp-for="Estado" class="form-control">
+            @foreach (var estado in estados)
+            {
+                <option value="@estado" selected="@(estado == Model.Estado ? "selected" : null)">@estado</option>
+            }
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>Total</label>
+        <input asp-for="Total" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label>Abono</label>
+        <input asp-for="Abono" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label>Fecha Estimada</label>
+        <input asp-for="FechaEstimada" type="date" class="form-control" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Guardar</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+</form>
