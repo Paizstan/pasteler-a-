@@ -6,31 +6,41 @@
 
 <h2>Reporte de Volumen de Ventas - Vida Mia</h2>
 
-<form asp-action="VolumenVentasPDF" method="post" class="mb-3">
+<form asp-action="VolumenVentas" method="get" class="mb-3">
     <div class="row mb-2">
         <div class="col-md-3">
             <label>Filtrar por día</label>
-            <input type="date" name="fecha" class="form-control" />
+            <input type="date" name="fecha" class="form-control" value="@ViewBag.FiltroFecha" />
         </div>
         <div class="col-md-3">
             <label>Filtrar por mes</label>
-            <input type="month" name="mes" class="form-control" />
+            <input type="month" name="mes" class="form-control" value="@ViewBag.FiltroMes" />
         </div>
         <div class="col-md-3">
             <label>Estado</label>
             <select name="estado" class="form-control">
-                <option value="Todos">Todos</option>
-                <option value="Pendiente">Pendiente</option>
-                <option value="En proceso">En proceso</option>
-                <option value="Finalizado">Finalizado</option>
-                <option value="Anulado">Anulado</option>
+                @{
+                    string est = ViewBag.FiltroEstado ?? "Todos";
+                    string[] estados = new[] { "Todos", "Pendiente", "En proceso", "Finalizado", "Anulado" };
+                }
+                @foreach (var e in estados)
+                {
+                    <option value="@e" selected="@(e==est)">@e</option>
+                }
             </select>
         </div>
-        <div class="col-md-3 d-flex align-items-end">
-            <button type="submit" class="btn btn-primary w-100">Generar PDF</button>
+        <div class="col-md-3 d-flex align-items-end gap-2">
+            <button type="submit" class="btn btn-secondary w-100">Aplicar</button>
+            <button type="submit"
+                    class="btn btn-primary w-100"
+                    formaction="@(Url.Action("VolumenVentasPDF","Reportes"))"
+                    formmethod="post">
+                Generar PDF
+            </button>
         </div>
     </div>
 </form>
+
 
 <hr />
 

@@ -18,18 +18,42 @@ namespace SistemadePasteleria.Controllers
         }
 
         // GET: Reportes/VolumenVentas
-        public IActionResult VolumenVentas()
+        public IActionResult VolumenVentas(DateTime? fecha, string? mes, string estado = "Todos")
         {
-            ViewBag.Estados = new List<string> { "", "Pendiente", "En proceso", "Finalizado", "Anulado" };
+            var q = _context.Pedidos
+                .Include(p => p.Cliente)
+                .Include(p => p.Usuario)
+                .AsQueryable();
 
-            var pedidos = _context.Pedidos
-                .Include(p => p.Cliente)   // para que Cliente?.Nombre no sea null
-                .Include(p => p.Usuario)   // para que Usuario?.Nombre no sea null
-                .OrderByDescending(p => p.Fecha)
-                .ToList();
+            if (fecha.HasValue)
+            {
+                var f = DateOnly.FromDateTime(fecha.Value.Date);
+                q = q.Where(p => p.Fecha == f);
+            }
 
-            return View(pedidos); // <<--- enviar el modelo a la vista
+            if (!string.IsNullOrWhiteSpace(mes)) // "yyyy-MM" desde <input type="month">
+            {
+                var parts = mes.Split('-');
+                if (parts.Length >= 2 &&
+                    int.TryParse(parts[0], out var year) &&
+                    int.TryParse(parts[1], out var month))
+                {
+                    q = q.Where(p => p.Fecha.Year == year && p.Fecha.Month == month);
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(estado) && estado != "Todos")
+                q = q.Where(p => p.Estado == estado);
+
+            var pedidos = q.OrderByDescending(p => p.Fecha).ToList();
+
+            ViewBag.FiltroFecha = fecha?.ToString("yyyy-MM-dd");
+            ViewBag.FiltroMes = mes;
+            ViewBag.FiltroEstado = estado;
+
+            return View(pedidos);
         }
+
 
 
         // POST: Reportes/VolumenVentasPDF
