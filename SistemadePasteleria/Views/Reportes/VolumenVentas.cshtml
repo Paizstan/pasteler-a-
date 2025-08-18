@@ -1,67 +1,73 @@
-﻿@model IEnumerable<SistemadePasteleria.Models.VolumenVentasModel>
+﻿@model IEnumerable<SistemadePasteleria.Models.Pedido>
 
 @{
-    ViewData["Title"] = "Volumen de Ventas";
+    ViewData["Title"] = "Reporte de Volumen de Ventas";
 }
 
-<div class="card shadow-sm p-4" style="background-color: rgba(255, 255, 255, 0.9); border-radius: 12px;">
-    <h2 class="mb-4 text-center" style="color: #6c757d;">
-        🍰 Reporte de Ventas por @((ViewBag.Filtro == "mes") ? "Mes" : "Día")
-    </h2>
+<h2>Reporte de Volumen de Ventas - Vida Mia</h2>
 
-    <!-- Filtro -->
-    <div class="d-flex justify-content-center mb-4">
-        <form method="get" asp-action="VolumenVentas" class="d-flex" id="filtroForm">
-            <label for="filtro" class="form-label me-2 fw-bold" style="color:#6c757d;">Filtrar por:</label>
-            <select name="filtro" id="filtro"
-                    class="form-select me-2"
-                    style="width: 120px; border-radius: 8px;"
-                    onchange="document.getElementById('filtroForm').submit();">
-                <option value="dia" selected="@("dia" == ViewBag.Filtro)">Día</option>
-                <option value="mes" selected="@("mes" == ViewBag.Filtro)">Mes</option>
+<form asp-action="VolumenVentasPDF" method="post" class="mb-3">
+    <div class="row mb-2">
+        <div class="col-md-3">
+            <label>Filtrar por día</label>
+            <input type="date" name="fecha" class="form-control" />
+        </div>
+        <div class="col-md-3">
+            <label>Filtrar por mes</label>
+            <input type="month" name="mes" class="form-control" />
+        </div>
+        <div class="col-md-3">
+            <label>Estado</label>
+            <select name="estado" class="form-control">
+                <option value="Todos">Todos</option>
+                <option value="Pendiente">Pendiente</option>
+                <option value="En proceso">En proceso</option>
+                <option value="Finalizado">Finalizado</option>
+                <option value="Anulado">Anulado</option>
             </select>
-        </form>
+        </div>
+        <div class="col-md-3 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary w-100">Generar PDF</button>
+        </div>
     </div>
+</form>
 
-    <!-- Botón PDF -->
-    <div class="text-center mb-4">
-        <a asp-action="GenerarVolumenVentasPdf"
-           asp-route-filtro="@ViewBag.Filtro"
-           class="btn"
-           style="background-color: #adb5bd; color: white; border-radius: 8px;">
-            📄 Descargar PDF
-        </a>
-    </div>
+<hr />
 
-    <!-- Tabla -->
-    <table class="table table-hover table-bordered text-center"
-           style="background-color: white; border-radius: 8px; overflow: hidden;">
-        <thead style="background-color: #e9ecef; color: #6c757d;">
-            <tr>
-                <th>📅 Fecha</th>
-                <th>📦 Total Pedidos</th>
-                <th>💵 Total Vendido ($)</th>
-            </tr>
-        </thead>
-        <tbody>
-            @if (!Model.Any())
+<h4>Pedidos filtrados</h4>
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Cliente</th>
+            <th>Usuario</th>
+            <th>Fecha</th>
+            <th>Estado</th>
+            <th>Total</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model != null && Model.Any())
+        {
+            int i = 1;
+            foreach (var pedido in Model)
             {
                 <tr>
-                    <td colspan="3" class="text-muted">No hay datos disponibles para el filtro seleccionado.</td>
+                    <td>@i</td>
+                    <td>@pedido.Cliente?.Nombre</td>
+                    <td>@pedido.Usuario?.Nombre</td>
+                    <td>@pedido.Fecha.ToString("dd/MM/yyyy")</td>
+                    <td>@pedido.Estado</td>
+                    <td>@pedido.Total.ToString("C")</td>
                 </tr>
+                i++;
             }
-            else
-            {
-                @foreach (var item in Model)
-                {
-                    <tr>
-                        <td>@item.Fecha.ToString("dd/MM/yyyy")</td>
-                        <td>@item.TotalPedidos</td>
-                        <td>$@item.TotalVentas.ToString("F2")</td>
-                    </tr>
-                }
-            }
-        </tbody>
-    </table>
-    <partial name="_Paginacion" model="ViewBag.Paginacion" />
-</div>
+        }
+        else
+        {
+            <tr>
+                <td colspan="6" class="text-center">No hay pedidos para mostrar</td>
+            </tr>
+        }
+    </tbody>
+</table>
