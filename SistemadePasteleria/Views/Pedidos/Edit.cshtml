@@ -1,52 +1,164 @@
-﻿@model SistemadePasteleria.Models.Pedido
+﻿@model SistemadePasteleria.ViewModels.PedidoEditVM
 
-@{
-    ViewData["Title"] = "Editar Pedido";
-    var clientes = ViewData["Clientes"] as List<SistemadePasteleria.Models.Cliente>;
-    var usuarios = ViewData["Usuarios"] as List<SistemadePasteleria.Models.Usuario>;
-    var estados = ViewData["Estados"] as List<string>;
-}
+<h2>Editar Pedido</h2>
 
-<h1>Editar Pedido</h1>
-
-<form asp-action="Edit">
+<form asp-action="Edit" method="post">
     <input type="hidden" asp-for="Id" />
 
     <div class="form-group">
         <label>Cliente</label>
-        <select asp-for="ClienteId" class="form-control" asp-items="@(new SelectList(clientes, "Id", "Nombre", Model.ClienteId))"></select>
+        <select asp-for="ClienteId" class="form-control"
+                asp-items="@(new SelectList(Model.Clientes, "Id", "Nombre", Model.ClienteId))"></select>
     </div>
 
     <div class="form-group">
         <label>Usuario</label>
-        <select asp-for="UsuarioId" class="form-control" asp-items="@(new SelectList(usuarios, "Id", "Nombre", Model.UsuarioId))"></select>
+        <select asp-for="UsuarioId" class="form-control"
+                asp-items="@(new SelectList(Model.Usuarios, "Id", "Nombre", Model.UsuarioId))"></select>
     </div>
 
     <div class="form-group">
         <label>Estado</label>
-        <select asp-for="Estado" class="form-control">
-            @foreach (var estado in estados)
+        <select asp-for="Estado" class="form-control"
+                asp-items="@(new SelectList(Model.Estados, Model.Estado))"></select>
+    </div>
+
+    <div class="form-group">
+        <label>Fecha</label>
+        <input asp-for="Fecha" class="form-control" type="date" />
+    </div>
+
+    <hr />
+    <h4>Detalles</h4>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Producto</th>
+                <th>Cantidad</th>
+                <th>Precio Unit.</th>
+                <th>Subtotal</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody id="detallesTable">
+            @for (int i = 0; i < Model.Detalles.Count; i++)
             {
-                <option value="@estado" selected="@(estado == Model.Estado ? "selected" : null)">@estado</option>
+                <tr>
+                    <td>
+                        <select name="Detalles[@i].ProductoId" class="form-control producto-select" data-index="@i">
+                            @foreach (var p in Model.Productos)
+                            {
+                                <option value="@p.Id" selected="@(p.Id == Model.Detalles[i].ProductoId ? "selected" : null)">@p.Nombre</option>
+                            }
+                        </select>
+                        <input type="hidden" name="Detalles[@i].Id" value="@Model.Detalles[i].Id" />
+                        <input type="hidden" name="Detalles[@i].PrecioUnitario" value="@Model.Detalles[i].PrecioUnitario" />
+                    </td>
+                    <td><input type="number" name="Detalles[@i].Cantidad" class="form-control cantidad-input" value="@Model.Detalles[i].Cantidad" min="1" data-index="@i" /></td>
+                    <td class="precio-unitario">@Model.Detalles[i].PrecioUnitario</td>
+                    <td class="subtotal">@Model.Detalles[i].Subtotal</td>
+                    <td><button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">X</button></td>
+                </tr>
             }
-        </select>
-    </div>
+        </tbody>
+    </table>
 
-    <div class="form-group">
-        <label>Total</label>
-        <input asp-for="Total" class="form-control" />
-    </div>
+    <button type="button" class="btn btn-success" onclick="addRow()">Agregar Producto</button>
 
-    <div class="form-group">
-        <label>Abono</label>
-        <input asp-for="Abono" class="form-control" />
-    </div>
-
-    <div class="form-group">
-        <label>Fecha Estimada</label>
-        <input asp-for="FechaEstimada" type="date" class="form-control" />
-    </div>
-
+    <hr />
     <button type="submit" class="btn btn-primary">Guardar</button>
     <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
 </form>
+
+@section Scripts {
+<script>
+    // Array de productos con precios (desde Razor a JS)
+    var productos = [
+        @foreach(var p in Model.Productos)
+        {
+            var comma = p != Model.Productos.Last() ? "," : "";
+            <text>{ id: @p.Id, nombre: "@p.Nombre", precio: @p.Precio }@comma</text>
+        }
+    ];
+
+    function removeRow(btn) {
+        const row = btn.closest("tr");
+        row.remove();
+
+        // Reindexar los nombres de los inputs después de eliminar
+        reindexRows();
+    }
+
+    function addRow() {
+        let index = document.querySelectorAll("#detallesTable tr").length;
+        let row = document.createElement("tr");
+
+        let options = "";
+        productos.forEach(p => {
+            options += `<option value="${p.id}">${p.nombre}</option>`;
+        });
+
+        row.innerHTML = `
+            <td>
+                <select name="Detalles[${index}].ProductoId" class="form-control producto-select" data-index="${index}">
+                    ${options}
+                </select>
+                <input type="hidden" name="Detalles[${index}].PrecioUnitario" value="0" />
+            </td>
+            <td><input type="number" name="Detalles[${index}].Cantidad" class="form-control cantidad-input" value="1" min="1" data-index="${index}" /></td>
+            <td class="precio-unitario">0</td>
+            <td class="subtotal">0</td>
+            <td><button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">X</button></td>
+        `;
+
+        document.querySelector("#detallesTable").appendChild(row);
+        attachEvents();
+        updateRow(index);
+        reindexRows();
+    }
+
+    function reindexRows() {
+        document.querySelectorAll("#detallesTable tr").forEach((row, i) => {
+            row.querySelectorAll("[name]").forEach(input => {
+                let name = input.getAttribute("name");
+                name = name.replace(/Detalles\[\d+\]/, `Detalles[${i}]`);
+                input.setAttribute("name", name);
+                if (input.classList.contains("producto-select") || input.classList.contains("cantidad-input")) {
+                    input.setAttribute("data-index", i);
+                }
+            });
+        });
+    }
+
+    function attachEvents() {
+        document.querySelectorAll(".producto-select").forEach(select => {
+            select.onchange = () => updateRow(select.dataset.index);
+        });
+        document.querySelectorAll(".cantidad-input").forEach(input => {
+            input.oninput = () => updateRow(input.dataset.index);
+        });
+    }
+
+    function updateRow(index) {
+        let row = document.querySelector(`#detallesTable tr:nth-child(${parseInt(index)+1})`);
+        if(!row) return;
+
+        let select = row.querySelector(".producto-select");
+        let cantidadInput = row.querySelector(".cantidad-input");
+        let precioTd = row.querySelector(".precio-unitario");
+        let subtotalTd = row.querySelector(".subtotal");
+        let hiddenPrecio = row.querySelector(`input[name='Detalles[${index}].PrecioUnitario']`);
+
+        let producto = productos.find(p => p.id == select.value);
+        let cantidad = parseInt(cantidadInput.value) || 1;
+
+        precioTd.innerText = producto ? producto.precio.toFixed(2) : "0.00";
+        subtotalTd.innerText = producto ? (producto.precio * cantidad).toFixed(2) : "0.00";
+
+        if(hiddenPrecio) hiddenPrecio.value = producto ? producto.precio : 0;
+    }
+
+    // Inicializar eventos en las filas existentes
+    attachEvents();
+</script>
+}

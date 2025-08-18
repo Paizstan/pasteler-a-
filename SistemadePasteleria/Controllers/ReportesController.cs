@@ -1,13 +1,12 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
 using SistemadePasteleria.Models;
-using SistemadePasteleria.Utilidades;
-
 
 namespace SistemadePasteleria.Controllers
 {
-    [Authorize(Roles = "Administrador")]
     public class ReportesController : Controller
     {
         private readonly PasteldbContext _context;
@@ -17,80 +16,113 @@ namespace SistemadePasteleria.Controllers
             _context = context;
         }
 
-        // 🔹 Acción para mostrar la vista con los datos (HTML)
-        public async Task<IActionResult> VolumenVentas(string filtro = "dia", int pagina = 1)
+        // GET: Reportes/VolumenVentas
+        public IActionResult VolumenVentas()
         {
-            if (string.IsNullOrEmpty(filtro))
-                filtro = "dia";
-
-            ViewBag.Filtro = filtro;
-
-            var pedidos = await _context.Pedidos
-                .Select(p => new
-                {
-                    p.Fecha,
-                    p.Total
-                })
-                .ToListAsync();
-
-            var datos = pedidos
-                .GroupBy(p => filtro == "mes"
-                    ? new DateTime(p.Fecha.Year, p.Fecha.Month, 1)
-                    : p.Fecha.ToDateTime(TimeOnly.MinValue)) // ← FIX aquí
-                .Select(g => new VolumenVentasModel
-                {
-                    Fecha = g.Key,
-                    TotalPedidos = g.Count(),
-                    TotalVentas = g.Sum(p => p.Total)
-                })
-                .OrderByDescending(x => x.Fecha)
-                .ToList();
-
-            // 🔹 Paginación
-            int totalRegistros = datos.Count();
-            var paginacion = new Paginacion(totalRegistros, pagina, 10, "Reportes", "VolumenVentas");
-
-            var datosPaginados = datos
-                .Skip(paginacion.Salto)
-                .Take(paginacion.RegistrosPagina)
-                .ToList();
-
-            ViewBag.Paginacion = paginacion;
-
-            return View(datos); // Esto carga VolumenVentas.cshtml
+            ViewBag.Estados = new List<string> { "", "Pendiente", "En proceso", "Finalizado", "Anulado" };
+            return View();
         }
 
-        // 🔹 Acción para generar y descargar el PDF
-        public async Task<IActionResult> GenerarVolumenVentasPdf(string filtro = "dia")
+        // POST: Reportes/VolumenVentasPDF
+        [HttpPost]
+        public async Task<IActionResult> VolumenVentasPDF(DateTime? fecha, int? mes, string estado)
         {
-            if (string.IsNullOrEmpty(filtro))
-                filtro = "dia";
+            var query = _context.Pedidos
+                .Include(p => p.DetallePedidos)
+                    .ThenInclude(d => d.Producto)
+                .Include(p => p.Cliente)
+                .Include(p => p.Usuario)
+                .AsQueryable();
 
-            var pedidos = await _context.Pedidos
-                .Select(p => new
+            if (fecha.HasValue)
+            {
+                query = query.Where(p => p.Fecha == DateOnly.FromDateTime(fecha.Value));
+            }
+            else if (mes.HasValue)
+            {
+                query = query.Where(p => p.Fecha.Month == mes.Value && p.Fecha.Year == DateTime.Today.Year);
+            }
+
+            if(!string.IsNullOrEmpty(estado) && estado != "Todos")
+{
+                query = query.Where(p => p.Estado == estado);
+            }
+
+            var pedidos = await query.ToListAsync();
+
+            var pdfBytes = GeneratePDF(pedidos, fecha, mes, estado);
+
+            return File(pdfBytes, "application/pdf", "VolumenVentas_VidaMia.pdf");
+        }
+
+        private byte[] GeneratePDF(List<Pedido> pedidos, DateTime? fecha, int? mes, string estado)
+        {
+            return Document.Create(container =>
+            {
+                container.Page(page =>
                 {
-                    p.Fecha,
-                    p.Total
-                })
-                .ToListAsync();
+                    page.Margin(30);
+                    page.Header()
+                        .Text("Reporte de Volumen de Ventas - Vida Mia")
+                        .Bold().FontSize(18).AlignCenter();
 
-            var datos = pedidos
-                .GroupBy(p => filtro == "mes"
-                    ? new DateTime(p.Fecha.Year, p.Fecha.Month, 1)
-                    : p.Fecha.ToDateTime(TimeOnly.MinValue)) // ← FIX aquí
-                .Select(g => new VolumenVentasModel
-                {
-                    Fecha = g.Key,
-                    TotalPedidos = g.Count(),
-                    TotalVentas = g.Sum(p => p.Total)
-                })
-                .OrderByDescending(x => x.Fecha)
-                .ToList();
+                    page.Content()
+                        .Column(col =>
+                        {
+                            col.Item().Text($"Filtros aplicados: " +
+                                $"{(fecha.HasValue ? $"Día: {fecha.Value:dd/MM/yyyy}" : "")}" +
+                                $"{(mes.HasValue ? $"Mes: {mes.Value}" : "")}" +
+                                $"{(!string.IsNullOrEmpty(estado) ? $"Estado: {estado}" : "")}")
+                                .FontSize(12).Italic();
 
-            var document = new VolumenVentasDocument(datos, filtro); // clase personalizada para PDF
-            var pdfStream = document.GeneratePdf();
+                            col.Spacing(10);
 
-            return File(pdfStream, "application/pdf", $"volumen-ventas-{filtro}.pdf");
+                            if (!pedidos.Any())
+                            {
+                                col.Item().Text("No se encontraron pedidos con esos filtros.");
+                            }
+                            else
+                            {
+                                col.Item().Table(table =>
+                                {
+                                    table.ColumnsDefinition(columns =>
+                                    {
+                                        columns.RelativeColumn(1); // ID
+                                        columns.RelativeColumn(2); // Cliente
+                                        columns.RelativeColumn(2); // Usuario
+                                        columns.RelativeColumn(1); // Fecha
+                                        columns.RelativeColumn(1); // Estado
+                                        columns.RelativeColumn(1); // Total
+                                    });
+
+                                    table.Header(header =>
+                                    {
+                                        header.Cell().Text("Pedido #").Bold();
+                                        header.Cell().Text("Cliente").Bold();
+                                        header.Cell().Text("Usuario").Bold();
+                                        header.Cell().Text("Fecha").Bold();
+                                        header.Cell().Text("Estado").Bold();
+                                        header.Cell().Text("Total").Bold();
+                                    });
+
+                                    foreach (var pedido in pedidos)
+                                    {
+                                        table.Cell().Text($"#{pedido.Id}");
+                                        table.Cell().Text(pedido.Cliente?.Nombre ?? "N/A");
+                                        table.Cell().Text(pedido.Usuario?.Nombre ?? "N/A");
+                                        table.Cell().Text(pedido.Fecha.ToString("dd/MM/yyyy"));
+                                        table.Cell().Text(pedido.Estado);
+                                        table.Cell().Text($"${pedido.Total:F2}");
+                                    }
+                                });
+                            }
+                        });
+
+                    page.Footer()
+                        .AlignCenter()
+                        .Text($"Vida Mia - {DateTime.Now:dd/MM/yyyy HH:mm}");
+                });
+            }).GeneratePdf();
         }
     }
 }

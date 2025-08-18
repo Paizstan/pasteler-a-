@@ -1,55 +1,55 @@
 ﻿@model SistemadePasteleria.Models.Pedido
 
 @{
-    ViewData["Title"] = "Detalles Pedido";
+    ViewData["Title"] = "Detalles del Pedido";
 }
 
 <h1>Detalles del Pedido</h1>
+<hr />
 
 <div>
-    <h4>Pedido</h4>
-    <hr />
     <dl class="row">
-        <dt class="col-sm-2">Cliente</dt>
-        <dd class="col-sm-10">@Model.Cliente.Nombre</dd>
-
-        <dt class="col-sm-2">Usuario</dt>
-        <dd class="col-sm-10">@Model.Usuario.Nombre</dd>
+        <dt class="col-sm-2">ID</dt>
+        <dd class="col-sm-10">@Model.Id</dd>
 
         <dt class="col-sm-2">Fecha</dt>
         <dd class="col-sm-10">@Model.Fecha</dd>
 
+        <dt class="col-sm-2">Cliente</dt>
+        <dd class="col-sm-10">@Model.Cliente?.Nombre</dd>
+
+        <dt class="col-sm-2">Usuario</dt>
+        <dd class="col-sm-10">@Model.Usuario?.Nombre</dd>
+
         <dt class="col-sm-2">Total</dt>
-        <dd class="col-sm-10">@Model.Total</dd>
+        <dd class="col-sm-10">@Model.Total.ToString("C")</dd>
 
         <dt class="col-sm-2">Estado</dt>
         <dd class="col-sm-10">@Model.Estado</dd>
     </dl>
 </div>
 
-<h4>Detalles del Pedido</h4>
+<h4>Detalle de Productos</h4>
 <table class="table">
     <thead>
         <tr>
             <th>Producto</th>
             <th>Cantidad</th>
-            <th>Precio</th>
+            <th>Precio Unitario</th>
+            <th>Subtotal</th>
         </tr>
     </thead>
     <tbody>
         @foreach (var detalle in Model.DetallePedidos)
         {
             <tr>
-                <td>@detalle.Producto.Nombre</td>
+                <td>@detalle.Producto?.Nombre</td>
                 <td>@detalle.Cantidad</td>
-                <td>@detalle.PrecioUnitario</td>
-                <td>@(detalle.Cantidad* detalle.PrecioUnitario)</td>
+                <td>@detalle.PrecioUnitario.ToString("C")</td>
+                <td>@detalle.Subtotal.ToString("C")</td>
             </tr>
         }
-
     </tbody>
 </table>
 
-<p>
-    <a asp-action="Index" class="btn btn-secondary">Volver</a>
-</p>
+<a asp-action="Index" class="btn btn-secondary">Volver</a>

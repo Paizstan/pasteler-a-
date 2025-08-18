@@ -36,6 +36,8 @@ public partial class PasteldbContext : DbContext
         => optionsBuilder.UseSqlServer("Server=DESKTOP-CM8A4JK\\MSSQLSERVER01;Database=pasteldb;Trusted_Connection=True;TrustServerCertificate=True");
 
 
+
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Categoria>(entity =>
