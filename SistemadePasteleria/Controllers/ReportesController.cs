@@ -21,8 +21,16 @@ namespace SistemadePasteleria.Controllers
         public IActionResult VolumenVentas()
         {
             ViewBag.Estados = new List<string> { "", "Pendiente", "En proceso", "Finalizado", "Anulado" };
-            return View();
+
+            var pedidos = _context.Pedidos
+                .Include(p => p.Cliente)   // para que Cliente?.Nombre no sea null
+                .Include(p => p.Usuario)   // para que Usuario?.Nombre no sea null
+                .OrderByDescending(p => p.Fecha)
+                .ToList();
+
+            return View(pedidos); // <<--- enviar el modelo a la vista
         }
+
 
         // POST: Reportes/VolumenVentasPDF
         [HttpPost]
