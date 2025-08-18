@@ -1,0 +1,32 @@
+﻿@model IEnumerable<SistemadePasteleria.Models.Pedido>
+
+@if (!Model.Any())
+{
+    <tr>
+        <td colspan="6" class="text-center text-muted">No se encontraron pedidos.</td>
+    </tr>
+}
+else
+{
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td class="align-middle">@item.Cliente.Nombre</td>
+            <td class="align-middle">@item.Usuario.Nombre</td>
+            <td class="align-middle">@item.Fecha.ToString("dd/MM/yyyy")</td>
+            <td class="align-middle">@item.Total.ToString("C")</td>
+            <td class="align-middle">@item.Estado</td>
+            <td class="align-middle text-center">
+                <a asp-action="Edit" asp-route-id="@item.Id"
+                   class="btn btn-sm"
+                   style="background-color: #dee2e6; color: #6c757d; border-radius: 6px;">✏️ Editar</a>
+                <a asp-action="Details" asp-route-id="@item.Id"
+                   class="btn btn-sm"
+                   style="background-color: #cfe2f3; color: #495057; border-radius: 6px;">👁️ Ver</a>
+                <a asp-action="Delete" asp-route-id="@item.Id"
+                   class="btn btn-sm"
+                   style="background-color: #e57373; color: white; border-radius: 6px;">🗑️ Eliminar</a>
+            </td>
+        </tr>
+    }
+}

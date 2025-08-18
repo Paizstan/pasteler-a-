@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using SistemadePasteleria.Models;
+using SistemadePasteleria.Utilidades;
 using SistemadePasteleria.ViewModels;
 
 namespace SistemadePasteleria.Controllers
@@ -16,16 +17,61 @@ namespace SistemadePasteleria.Controllers
         }
 
         // GET: Pedidos
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string? buscar, int pagina = 1)
         {
-            var pedidos = _context.Pedidos
+            var query = _context.Pedidos
                 .Include(p => p.Cliente)
                 .Include(p => p.Usuario)
                 .Include(p => p.DetallePedidos)
-                .ThenInclude(dp => dp.Producto);
+                    .ThenInclude(dp => dp.Producto)
+                .AsQueryable();
 
-            return View(await pedidos.ToListAsync());
+            // Ordenar para consistencia (puede ser por fecha descendente o Id)
+            query = query.OrderByDescending(p => p.Fecha);
+
+            // 📄 Paginación
+            int totalRegistros = await query.CountAsync();
+            var paginacion = new Paginacion(totalRegistros, pagina, 5, "Pedidos", "Index");
+
+            var resultado = await query
+                .Skip(paginacion.Salto)
+                .Take(paginacion.RegistrosPagina)
+                .ToListAsync();
+
+            // Para que la vista pueda usar búsqueda y paginación
+            ViewData["buscar"] = buscar;
+            ViewBag.Paginacion = paginacion;
+            ViewBag.Busqueda = buscar;
+
+            return View(resultado);
         }
+
+        public async Task<IActionResult> Buscar(string term)
+        {
+            var query = _context.Pedidos
+                .Include(p => p.Cliente)
+                .Include(p => p.Usuario)
+                .Include(p => p.DetallePedidos)
+                .ThenInclude(dp => dp.Producto)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(term))
+            {
+                var likeTerm = $"%{term.Trim()}%";
+                query = query.Where(p =>
+                    EF.Functions.Like(p.Cliente.Nombre, likeTerm) ||
+                    EF.Functions.Like(p.Usuario.Nombre, likeTerm) ||
+                    EF.Functions.Like(p.Estado, likeTerm)
+                );
+            }
+
+            var pedidos = await query
+                .OrderBy(p => p.Fecha)
+                .ToListAsync();
+
+            return PartialView("_PedidosRows", pedidos);
+        }
+
 
         // GET: Pedidos/Details/5
         public async Task<IActionResult> Details(int? id)
