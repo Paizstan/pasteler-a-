@@ -56,29 +56,49 @@ namespace SistemadePasteleria.Controllers
 
 
 
-        // POST: Reportes/VolumenVentasPDF
         [HttpPost]
-        public async Task<IActionResult> VolumenVentasPDF(DateTime? fecha, int? mes, string estado)
+        public async Task<IActionResult> VolumenVentasPDF(DateTime? fecha, string? mes, string estado)
         {
-            var query = _context.Pedidos
+            var q = _context.Pedidos
                 .Include(p => p.DetallePedidos).ThenInclude(d => d.Producto)
                 .Include(p => p.Cliente)
                 .Include(p => p.Usuario)
                 .AsQueryable();
 
+            // 1) Filtro por día (tu campo es DateOnly)
             if (fecha.HasValue)
-                query = query.Where(p => p.Fecha == DateOnly.FromDateTime(fecha.Value));
-            else if (mes.HasValue)
-                query = query.Where(p => p.Fecha.Month == mes.Value && p.Fecha.Year == DateTime.Today.Year);
+            {
+                var f = DateOnly.FromDateTime(fecha.Value.Date);
+                q = q.Where(p => p.Fecha == f);
+            }
 
-            if (!string.IsNullOrEmpty(estado) && estado != "Todos")
-                query = query.Where(p => p.Estado == estado);
+            // 2) Filtro por mes "yyyy-MM" (parsea año y mes reales del control)
+            if (!string.IsNullOrWhiteSpace(mes))
+            {
+                var parts = mes.Split('-');
+                if (parts.Length >= 2 &&
+                    int.TryParse(parts[0], out var year) &&
+                    int.TryParse(parts[1], out var month))
+                {
+                    q = q.Where(p => p.Fecha.Year == year && p.Fecha.Month == month);
+                }
+            }
 
-            var pedidos = await query.ToListAsync();
+            // 3) Filtro por estado
+            if (!string.IsNullOrWhiteSpace(estado) && estado != "Todos")
+                q = q.Where(p => p.Estado == estado);
 
-            var pdfBytes = GeneratePDF(pedidos, fecha, mes, estado);
+            var pedidos = await q.OrderByDescending(p => p.Fecha).ToListAsync();
+
+            // Si tu GeneratePDF espera int? mes, conviértelo:
+            int? mesNumero = null;
+            if (!string.IsNullOrWhiteSpace(mes) && mes.Length >= 7 && int.TryParse(mes.Substring(5, 2), out var m))
+                mesNumero = m;
+
+            var pdfBytes = GeneratePDF(pedidos, fecha, mesNumero, estado);
             return File(pdfBytes, "application/pdf", "VolumenVentas_VidaMia.pdf");
         }
+
 
         // ========= DISEÑO COMPATIBLE (sin BorderRadius ni APIs nuevas) =========
         private byte[] GeneratePDF(List<Pedido> pedidos, DateTime? fecha, int? mes, string estado)
