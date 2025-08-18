@@ -12,7 +12,7 @@ using SistemadePasteleria.Utilidades;
 
 namespace SistemadePasteleria.Controllers
 {
-    [Authorize(Roles = "Administrador")]
+    [Authorize(Roles = "Administrador, Empleado")]
     public class ClientesController : Controller
     {
         private readonly PasteldbContext _context;
